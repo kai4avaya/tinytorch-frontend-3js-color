@@ -132,7 +132,7 @@
             transform: translateY(-10.5px) rotate(-45deg);
         }
 
-        /* --- Create Account Button (Updated: Transparent Black) --- */
+        /* --- Create Account Button (Lighter Transparent Style) --- */
         .login-btn {
             position: fixed;
             top: 30px;
@@ -142,10 +142,10 @@
             font-size: 0.95rem;
             font-weight: bold;
             
-            /* Transparent style */
-            color: #333; 
+            /* Lighter Transparent style */
+            color: rgba(0, 0, 0, 0.6); 
             background: transparent;
-            border: 2px solid #333; 
+            border: 2px solid rgba(0, 0, 0, 0.3); 
             
             text-decoration: none;
             transition: all 0.2s ease;
@@ -162,9 +162,9 @@
         }
         
         .login-btn:hover {
-            background: rgba(0, 0, 0, 0.05); /* Slight dark tint on hover */
-            color: #000;
-            border-color: #000;
+            background: rgba(0, 0, 0, 0.04); /* Very slight tint on hover */
+            color: rgba(0, 0, 0, 0.8);
+            border-color: rgba(0, 0, 0, 0.5);
         }
 
         .login-icon {
@@ -748,8 +748,9 @@
             const angle = Math.random() * Math.PI * 2;
             
             // Distance from center:
-            const maxDist = 45; // Max % distance from center
-            const minDist = 5;
+            // MODIFIED: Increased minDist to 35 to push notifications to the outer edges
+            const maxDist = 55; // Max % distance from center
+            const minDist = 30; // Min % distance (Keep center clear)
             const dist = minDist + (depth * (maxDist - minDist));
             
             // Convert polar to cartesian offsets
