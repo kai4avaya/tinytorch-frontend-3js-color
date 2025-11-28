@@ -8,7 +8,7 @@
         body {
             margin: 0;
             overflow-x: hidden;
-            background-color: #f0f0f0; /* Default, overridden by JS */
+            background-color: #f0f0f0; 
             font-family: 'Courier New', Courier, monospace;
         }
 
@@ -26,7 +26,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 25000vh; /* Increased height for longer timeline */
+            height: 25000vh;
             z-index: 2;
             pointer-events: none;
         }
@@ -132,7 +132,7 @@
             transform: translateY(-10.5px) rotate(-45deg);
         }
 
-        /* --- Create Account Button (Transparent with Dark Border/Text) --- */
+        /* --- Create Account Button --- */
         .login-btn {
             position: fixed;
             top: 30px;
@@ -141,28 +141,21 @@
             font-family: 'Verdana', sans-serif;
             font-size: 0.95rem;
             font-weight: bold;
-            
-            /* Transparent style */
             color: rgba(30, 30, 30, 0.8); 
             background: transparent;
             border: 2px solid rgba(30, 30, 30, 0.8); 
-            
             text-decoration: none;
             transition: all 0.2s ease;
             cursor: pointer;
-            
-            /* Box Styling */
             padding: 10px 20px;
             border-radius: 30px;
-            
-            /* Flex layout for icon */
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
         .login-btn:hover {
-            background: rgba(0, 0, 0, 0.05); /* Slight dark tint on hover */
+            background: rgba(0, 0, 0, 0.05);
             color: #000;
             border-color: #000;
         }
@@ -282,7 +275,7 @@
             color: #bbb;
         }
 
-        /* --- Feed / Notifications Area --- */
+        /* --- Feed --- */
         #feed-container {
             position: fixed;
             top: 0;
@@ -345,14 +338,12 @@
 </head>
 <body>
 
-    <!-- Menu Button -->
     <button class="menu-btn" id="menuBtn">
         <span></span>
         <span></span>
         <span></span>
     </button>
     
-    <!-- Create Account Button -->
     <a href="#" class="login-btn">
         <svg class="login-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -360,7 +351,6 @@
         Create Account
     </a>
 
-    <!-- Sidebar Navigation -->
     <nav class="sidebar" id="sidebar">
         <a href="#" class="nav-item">Home</a>
         <a href="#" class="nav-item">About</a>
@@ -369,7 +359,6 @@
         <a href="#" class="nav-item">Contact</a>
     </nav>
 
-    <!-- Hero Title Block -->
     <div id="hero-title">
         <div class="logo-container">
             <svg class="fire-icon" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
@@ -396,19 +385,163 @@
         <div class="subtitle">Builder Community</div>
     </div>
 
-    <!-- Notification Feed Container -->
     <div id="feed-container"></div>
-
     <div id="canvas-container"></div>
     <div id="scroll-track"></div>
     <div id="markers-container"></div>
-    
     <div class="ui-overlay">
         <span>Scroll to traverse the History of AI</span>
     </div>
 
+    <!-- Sky Shader Vertex (Updated for 3D position) -->
+    <script id="sky-vs" type="x-shader/x-vertex">
+        varying vec2 vUv;
+        varying vec3 vWorldPosition;
+        void main() {
+            vUv = uv;
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+    </script>
+
+    <!-- Sky Shader Fragment (Switched to 3D Noise) -->
+    <script id="sky-fs" type="x-shader/x-fragment">
+        uniform float uTime;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        varying vec3 vWorldPosition;
+
+        // --- 3D Simplex Noise Functions ---
+        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+        vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+
+        float snoise(vec3 v){
+            const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+            const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+            // First corner
+            vec3 i  = floor(v + dot(v, C.yyy) );
+            vec3 x0 = v - i + dot(i, C.xxx) ;
+
+            // Other corners
+            vec3 g = step(x0.yzx, x0.xyz);
+            vec3 l = 1.0 - g;
+            vec3 i1 = min( g.xyz, l.zxy );
+            vec3 i2 = max( g.xyz, l.zxy );
+
+            //   x0 = x0 - 0.0 + 0.0 * C.xxx;
+            //   x1 = x0 - i1  + 1.0 * C.xxx;
+            //   x2 = x0 - i2  + 2.0 * C.xxx;
+            //   x3 = x0 - 1.0 + 3.0 * C.xxx;
+            vec3 x1 = x0 - i1 + C.xxx;
+            vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+            vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+
+            // Permutations
+            i = mod289(i);
+            vec4 p = permute( permute( permute(
+                        i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                    + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                    + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+            // Gradients: 7x7 points over a square, mapped onto an octahedron.
+            // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
+            float n_ = 0.142857142857; // 1.0/7.0
+            vec3  ns = n_ * D.wyz - D.xzx;
+
+            vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+
+            vec4 x_ = floor(j * ns.z);
+            vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+            vec4 x = x_ *ns.x + ns.yyyy;
+            vec4 y = y_ *ns.x + ns.yyyy;
+            vec4 h = 1.0 - abs(x) - abs(y);
+
+            vec4 b0 = vec4( x.xy, y.xy );
+            vec4 b1 = vec4( x.zw, y.zw );
+
+            //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
+            //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
+            vec4 s0 = floor(b0)*2.0 + 1.0;
+            vec4 s1 = floor(b1)*2.0 + 1.0;
+            vec4 sh = -step(h, vec4(0.0));
+
+            vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+            vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+            vec3 p0 = vec3(a0.xy,h.x);
+            vec3 p1 = vec3(a0.zw,h.y);
+            vec3 p2 = vec3(a1.xy,h.z);
+            vec3 p3 = vec3(a1.zw,h.w);
+
+            //Normalise gradients
+            vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+            p0 *= norm.x;
+            p1 *= norm.y;
+            p2 *= norm.z;
+            p3 *= norm.w;
+
+            // Mix final noise value
+            vec4 m = max(0.5 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+            m = m * m;
+            return 105.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                        dot(p2,x2), dot(p3,x3) ) );
+        }
+
+        // Fractal Brownian Motion (3D)
+        float fbm(vec3 p) {
+            float value = 0.0;
+            float amplitude = 0.5;
+            for (int i = 0; i < 5; i++) {
+                value += amplitude * snoise(p);
+                p *= 2.0;
+                amplitude *= 0.5;
+            }
+            return value;
+        }
+
+        void main() {
+            // Use normalized world position for seamless sampling on the sphere
+            vec3 pos = normalize(vWorldPosition);
+            
+            // Create movement
+            vec3 motion = vec3(uTime * 0.1, 0.0, 0.0);
+            
+            // Texture warping for liquid feel (3D)
+            vec3 warp = vec3(
+                fbm(pos * 2.0 + vec3(uTime * 0.05)),
+                fbm(pos * 2.0 + vec3(uTime * 0.05 + 10.0)),
+                fbm(pos * 2.0 + vec3(uTime * 0.05 + 20.0))
+            );
+
+            // Generate Noise
+            float n = fbm(pos * 3.0 + motion + warp * 0.5);
+            
+            // Normalize roughly 0 to 1
+            float cloudVal = (n + 1.0) * 0.5;
+            
+            // High Contrast Shaping
+            cloudVal = smoothstep(0.4, 0.7, cloudVal);
+
+            // Base colors
+            vec3 baseColor = uColor;
+            
+            // CLOUD HIGHLIGHT:
+            vec3 cloudHighlight = baseColor + vec3(0.4, 0.4, 0.45); 
+            cloudHighlight = min(cloudHighlight, vec3(1.0));
+
+            // Mix
+            vec3 finalColor = mix(baseColor, cloudHighlight, cloudVal);
+
+            gl_FragColor = vec4(finalColor, 1.0);
+        }
+    </script>
+
     <script>
-        // --- 1. Interaction Logic ---
         const menuBtn = document.getElementById('menuBtn');
         const sidebar = document.getElementById('sidebar');
         
@@ -417,9 +550,7 @@
             sidebar.classList.toggle('active');
         });
 
-        // --- 2. Configuration & Data ---
-        // REMOVED: Gemini, GPT-4, DeepSeek-R1
-        // KEPT: Research/Paper focused milestones + ChatGPT exception
+        // --- Configuration & Data ---
         const MILESTONES = [
             { year: 1958, name: "Perceptron", authors: "Frank Rosenblatt", z: -20 },
             { year: 1969, name: "XOR Problem", authors: "Minsky & Papert", z: -50 },
@@ -442,10 +573,9 @@
             { year: 2023, name: "I-JEPA (World Model)", authors: "LeCun et al. (Meta)", z: -420 },
             { year: 2023, name: "Phi-2", authors: "Microsoft Research", z: -440 },
             { year: 2024, name: "Llama 3", authors: "Meta AI", z: -460 },
-            { year: 2024, name: "DeepSeek-V2", authors: "DeepSeek AI", z: -480 } // Single DeepSeek entry
+            { year: 2024, name: "DeepSeek-V2", authors: "DeepSeek AI", z: -480 } 
         ];
 
-        // --- 3. Perlin Noise ---
         const Noise = (function() {
             var p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
             190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,
@@ -476,15 +606,16 @@
             };
         })();
 
-        // --- 4. Scene Setup ---
+        // --- Scene Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        // Initial Background (Morning/Off-white)
-        const bgColor = new THREE.Color(0xf5f5f0); 
-        scene.background = bgColor;
-        scene.fog = new THREE.Fog(bgColor, 10, 60);
+        // Updated background color (Brighter)
+        const initialBgColor = new THREE.Color(0xf0f4f8); 
+        
+        // FOG Adjustment
+        scene.fog = new THREE.Fog(initialBgColor, 20, 90); 
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 150);
         camera.position.set(0, 6, 12);
         camera.rotation.x = -Math.PI / 6;
 
@@ -493,7 +624,23 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // --- 5. Terrain Generation ---
+        // --- Sky Mesh Setup ---
+        const skyGeo = new THREE.SphereGeometry(100, 64, 64);
+        const skyMat = new THREE.ShaderMaterial({
+            vertexShader: document.getElementById('sky-vs').textContent,
+            fragmentShader: document.getElementById('sky-fs').textContent,
+            uniforms: {
+                uTime: { value: 0 },
+                // Updated background color (Brighter)
+                uColor: { value: new THREE.Color(0xf0f4f8) }
+            },
+            side: THREE.BackSide,
+            fog: false
+        });
+        const skyMesh = new THREE.Mesh(skyGeo, skyMat);
+        scene.add(skyMesh);
+
+        // --- Terrain ---
         const width = 60;
         const depth = 80; 
         const widthSegments = 80;
@@ -515,10 +662,22 @@
         const terrain = new THREE.Mesh(geometry, material);
         scene.add(terrain);
 
-        // --- 6. Timeline Path Generation ---
+        // --- Solid Terrain Background (The Fix) ---
+        // Instead of a flat backdrop plane (which creates a horizon line),
+        // we create a solid mesh that shares the SAME geometry as the wireframe.
+        // This makes the hills opaque, blocking the sky behind them naturally.
+        const solidMat = new THREE.MeshBasicMaterial({
+            color: 0xf5f5f0, // Initial color
+            polygonOffset: true, 
+            polygonOffsetFactor: 1, // Push it back slightly so wireframe shows on top
+            polygonOffsetUnits: 1
+        });
+        const terrainSolid = new THREE.Mesh(geometry, solidMat);
+        scene.add(terrainSolid);
+
+        // --- Timeline Path ---
         const historyLineGeo = new THREE.BufferGeometry();
         const futureLineGeo = new THREE.BufferGeometry();
-        
         const linePoints = 400; 
         historyLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePoints * 3), 3));
         historyLineGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(linePoints * 3), 3));
@@ -540,11 +699,10 @@
         });
         const glowPoints = new THREE.Points(glowGeo, glowMat);
         scene.add(glowPoints);
-
         scene.add(historyLine);
         scene.add(futureLine);
 
-        // Setup Markers
+        // --- Markers ---
         const markersContainer = document.getElementById('markers-container');
         const markerElements = [];
 
@@ -562,7 +720,7 @@
             markerElements.push({ data: m, element: div });
         });
 
-        // --- 7. Logic & Animation ---
+        // --- Logic & Animation ---
         const noiseScale = 0.15; 
         const heightScale = 4.0; 
         const positionAttribute = geometry.attributes.position;
@@ -581,22 +739,19 @@
         let targetFlyOverY = 0;
         const heroTitle = document.getElementById('hero-title');
 
-        // Sky Cycle Colors - COMPRESSED CYCLE
-        // Total range approx 0 to 600 scroll units
+        // Sky Cycle Colors (Updated for brighter start)
         const skyColors = [
-            { pos: 0, color: new THREE.Color(0xf5f5f0) },    // Morning (Start)
-            { pos: 150, color: new THREE.Color(0xdadad5) },  // Noon (Light Gray)
-            { pos: 300, color: new THREE.Color(0x8a959e) }, // Dusk/Sunset (Medium Slate)
-            { pos: 450, color: new THREE.Color(0x4a5568) }, // Night (Dark Slate Gray - Max Darkness here)
-            { pos: 550, color: new THREE.Color(0x8a959e) }, // Dawn (Medium Slate)
-            { pos: 700, color: new THREE.Color(0xf5f5f0) }  // Day
+            { pos: 0, color: new THREE.Color(0xf0f4f8) },    // Morning (Bright)
+            { pos: 150, color: new THREE.Color(0x8a929a) },  // Noon (Medium Grey)
+            { pos: 300, color: new THREE.Color(0x5a626a) },  // Dusk (Dark Slate)
+            { pos: 450, color: new THREE.Color(0x2a323a) },  // Night (Deep Grey)
+            { pos: 550, color: new THREE.Color(0x5a626a) },  // Dawn
+            { pos: 700, color: new THREE.Color(0xf0f4f8) }   // Day (Bright)
         ];
 
         function getSkyColor(y) {
-            // Shortened cycle to ensure we hit night before end of list
             const cycle = 700; 
             const modY = y % cycle;
-            
             for(let i=0; i<skyColors.length-1; i++) {
                 const curr = skyColors[i];
                 const next = skyColors[i+1];
@@ -624,12 +779,17 @@
         function updateScene() {
             flyOverY += (targetFlyOverY - flyOverY) * 0.08;
 
-            // Update Sky
             const skyColor = getSkyColor(flyOverY);
-            scene.background = skyColor;
-            scene.fog.color = skyColor;
+            
+            // Sync Fog, Sky Mesh
+            scene.fog.color.copy(skyColor);
+            skyMesh.material.uniforms.uColor.value.copy(skyColor);
+            // Faster time for rapid cloud movement
+            skyMesh.material.uniforms.uTime.value += 0.05; 
+            
+            // Sync solid terrain color so the ground darkens with the sky cycle
+            terrainSolid.material.color.copy(skyColor);
 
-            // 1. Update Terrain
             for (let i = 0; i < count; i++) {
                 const ix = i * 3;
                 const iz = i * 3 + 2;
@@ -647,7 +807,6 @@
             positionAttribute.needsUpdate = true;
             colorAttribute.needsUpdate = true;
 
-            // 2. Update Timeline Path
             const lineStartZ = 10;
             const lineEndZ = -70; 
             const step = (lineStartZ - lineEndZ) / linePoints;
@@ -684,7 +843,6 @@
             glowPos.needsUpdate = true;
             futureLine.computeLineDistances();
 
-            // 3. Update Markers
             const tempV = new THREE.Vector3();
             markerElements.forEach(item => {
                 const m = item.data;
@@ -749,37 +907,29 @@
 
         animate();
 
-        // --- 8. Real-time Submission Feed (Random/Center) ---
+        // --- Feed ---
         const feedContainer = document.getElementById('feed-container');
-        
         const mockUsers = ["Alex_Dev", "TorchWiz", "SarahAI", "DeepLearner99", "GridRunner", "TensorFlowFan", "KerasKid", "LlamaLover"];
         const mockModules = ["Module 01: Tensor Basics", "Module 02: Autograd", "Module 03: CNNs", "Module 04: RNNs", "Module 05: Transformers", "Module 06: Diffusion"];
 
         function spawnNotification() {
             const user = mockUsers[Math.floor(Math.random() * mockUsers.length)];
             const mod = mockModules[Math.floor(Math.random() * mockModules.length)];
-            
             const depth = Math.random(); 
-
             const el = document.createElement('div');
             el.className = 'feed-cloud';
             el.innerHTML = `<span class="username">${user}</span> just submitted <span class="module">${mod}</span>`;
             
             const vanishX = 50;
             const vanishY = 40;
-            
             const angle = Math.random() * Math.PI * 2;
-            
             const maxDist = 45; 
             const minDist = 5; 
             const dist = minDist + (depth * (maxDist - minDist));
-            
             const offsetX = Math.cos(angle) * dist; 
             const offsetY = Math.sin(angle) * dist; 
-            
             const leftPos = vanishX + offsetX; 
             const topPos = vanishY + offsetY;  
-
             const scale = 0.6 + (depth * 0.4);
             const opacity = 0.7 + (depth * 0.3);
             
