@@ -8,7 +8,7 @@
         body {
             margin: 0;
             overflow-x: hidden;
-            background-color: #f0f0f0;
+            background-color: #f0f0f0; /* Default, overridden by JS */
             font-family: 'Courier New', Courier, monospace;
         }
 
@@ -26,7 +26,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 20000vh;
+            height: 25000vh; /* Increased height for longer timeline */
             z-index: 2;
             pointer-events: none;
         }
@@ -132,7 +132,7 @@
             transform: translateY(-10.5px) rotate(-45deg);
         }
 
-        /* --- Create Account Button (Lighter Transparent Style) --- */
+        /* --- Create Account Button (Transparent with Dark Border/Text) --- */
         .login-btn {
             position: fixed;
             top: 30px;
@@ -142,10 +142,10 @@
             font-size: 0.95rem;
             font-weight: bold;
             
-            /* Lighter Transparent style */
-            color: rgba(0, 0, 0, 0.6); 
+            /* Transparent style */
+            color: rgba(30, 30, 30, 0.8); 
             background: transparent;
-            border: 2px solid rgba(0, 0, 0, 0.3); 
+            border: 2px solid rgba(30, 30, 30, 0.8); 
             
             text-decoration: none;
             transition: all 0.2s ease;
@@ -162,9 +162,9 @@
         }
         
         .login-btn:hover {
-            background: rgba(0, 0, 0, 0.04); /* Very slight tint on hover */
-            color: rgba(0, 0, 0, 0.8);
-            border-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.05); /* Slight dark tint on hover */
+            color: #000;
+            border-color: #000;
         }
 
         .login-icon {
@@ -296,35 +296,28 @@
 
         .feed-cloud {
             position: absolute;
-            /* Light Greenish background for visibility */
             background: rgba(220, 255, 230, 0.9);
             border: 1px solid rgba(46, 204, 113, 0.4);
-            backdrop-filter: blur(0px); /* No blur on text! */
-            
+            backdrop-filter: blur(0px); 
             padding: 10px 18px;
             border-radius: 50px;
             box-shadow: 0 4px 12px rgba(0, 50, 20, 0.1); 
-            
             font-family: 'Verdana', sans-serif;
-            font-size: 0.9rem; /* Slightly larger base size */
-            color: #2c3e50; /* Dark, legible text */
-            
-            /* Initial State */
+            font-size: 0.9rem;
+            color: #2c3e50;
             opacity: 0;
-            /* Smoother fade in */
             transition: opacity 2.5s ease-out, transform 2.5s ease-out;
-            
             transform-origin: center center;
             white-space: nowrap;
         }
         
         .feed-cloud span.username {
             font-weight: 800;
-            color: #1a5220; /* Dark Green */
+            color: #1a5220; 
         }
 
         .feed-cloud span.module {
-            color: #d35400; /* Darker Orange for contrast */
+            color: #d35400; 
             font-style: italic;
             font-weight: 600;
         }
@@ -361,7 +354,6 @@
     
     <!-- Create Account Button -->
     <a href="#" class="login-btn">
-        <!-- Simple User Icon -->
         <svg class="login-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
         </svg>
@@ -426,25 +418,31 @@
         });
 
         // --- 2. Configuration & Data ---
+        // REMOVED: Gemini, GPT-4, DeepSeek-R1
+        // KEPT: Research/Paper focused milestones + ChatGPT exception
         const MILESTONES = [
             { year: 1958, name: "Perceptron", authors: "Frank Rosenblatt", z: -20 },
             { year: 1969, name: "XOR Problem", authors: "Minsky & Papert", z: -50 },
             { year: 1986, name: "Backprop / MLP", authors: "Rumelhart, Hinton, Williams", z: -90 },
             { year: 1997, name: "Deep Blue", authors: "Feng-hsiung Hsu, Campbell", z: -130 },
-            { year: 1998, name: "LeNet (CNN)", authors: "Yann LeCun et al.", z: -150 },
+            { year: 1997, name: "LSTM", authors: "Hochreiter & Schmidhuber", z: -140 }, 
+            { year: 1998, name: "LeNet (CNN)", authors: "Yann LeCun et al.", z: -160 },
             { year: 2012, name: "AlexNet", authors: "Krizhevsky, Sutskever, Hinton", z: -200 },
+            { year: 2013, name: "DQN (Deep RL)", authors: "Mnih et al. (DeepMind)", z: -215 },
             { year: 2014, name: "GANs", authors: "Ian Goodfellow et al.", z: -230 },
-            { year: 2016, name: "AlphaGo", authors: "Silver, Hassabis (DeepMind)", z: -250 },
+            { year: 2015, name: "ResNet", authors: "Kaiming He et al.", z: -245 }, 
+            { year: 2016, name: "AlphaGo", authors: "Silver, Hassabis (DeepMind)", z: -260 },
             { year: 2017, name: "Transformer", authors: "Vaswani, Shazeer et al.", z: -280 },
-            { year: 2018, name: "GPT-1", authors: "Radford et al. (OpenAI)", z: -300 },
+            { year: 2018, name: "BERT", authors: "Devlin et al. (Google)", z: -295 },
+            { year: 2018, name: "GPT-1", authors: "Radford et al. (OpenAI)", z: -310 },
             { year: 2020, name: "GPT-3", authors: "Brown et al. (OpenAI)", z: -330 },
             { year: 2022, name: "ChatGPT", authors: "OpenAI", z: -360 },
-            { year: 2023, name: "GPT-4", authors: "OpenAI", z: -380 },
-            { year: 2023, name: "Mistral 7B (SLM)", authors: "Mistral AI", z: -400 },
-            { year: 2023, name: "Phi-2 (SLM)", authors: "Microsoft Research", z: -415 },
-            { year: 2024, name: "Gemini", authors: "Google DeepMind", z: -430 },
-            { year: 2024, name: "Llama 3 8B (SLM)", authors: "Meta AI", z: -450 },
-            { year: 2024, name: "DeepSeek-V2", authors: "DeepSeek AI", z: -470 }
+            { year: 2022, name: "Stable Diffusion", authors: "Rombach et al. (CompVis)", z: -375 },
+            { year: 2023, name: "Mistral 7B", authors: "Mistral AI", z: -400 },
+            { year: 2023, name: "I-JEPA (World Model)", authors: "LeCun et al. (Meta)", z: -420 },
+            { year: 2023, name: "Phi-2", authors: "Microsoft Research", z: -440 },
+            { year: 2024, name: "Llama 3", authors: "Meta AI", z: -460 },
+            { year: 2024, name: "DeepSeek-V2", authors: "DeepSeek AI", z: -480 } // Single DeepSeek entry
         ];
 
         // --- 3. Perlin Noise ---
@@ -481,6 +479,7 @@
         // --- 4. Scene Setup ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
+        // Initial Background (Morning/Off-white)
         const bgColor = new THREE.Color(0xf5f5f0); 
         scene.background = bgColor;
         scene.fog = new THREE.Fog(bgColor, 10, 60);
@@ -582,6 +581,33 @@
         let targetFlyOverY = 0;
         const heroTitle = document.getElementById('hero-title');
 
+        // Sky Cycle Colors - COMPRESSED CYCLE
+        // Total range approx 0 to 600 scroll units
+        const skyColors = [
+            { pos: 0, color: new THREE.Color(0xf5f5f0) },    // Morning (Start)
+            { pos: 150, color: new THREE.Color(0xdadad5) },  // Noon (Light Gray)
+            { pos: 300, color: new THREE.Color(0x8a959e) }, // Dusk/Sunset (Medium Slate)
+            { pos: 450, color: new THREE.Color(0x4a5568) }, // Night (Dark Slate Gray - Max Darkness here)
+            { pos: 550, color: new THREE.Color(0x8a959e) }, // Dawn (Medium Slate)
+            { pos: 700, color: new THREE.Color(0xf5f5f0) }  // Day
+        ];
+
+        function getSkyColor(y) {
+            // Shortened cycle to ensure we hit night before end of list
+            const cycle = 700; 
+            const modY = y % cycle;
+            
+            for(let i=0; i<skyColors.length-1; i++) {
+                const curr = skyColors[i];
+                const next = skyColors[i+1];
+                if (modY >= curr.pos && modY < next.pos) {
+                    const t = (modY - curr.pos) / (next.pos - curr.pos);
+                    return curr.color.clone().lerp(next.color, t);
+                }
+            }
+            return skyColors[0].color;
+        }
+
         function getPathX(z) {
             return Math.sin(z * 0.1) * 8 + Math.cos(z * 0.03) * 12;
         }
@@ -597,6 +623,11 @@
 
         function updateScene() {
             flyOverY += (targetFlyOverY - flyOverY) * 0.08;
+
+            // Update Sky
+            const skyColor = getSkyColor(flyOverY);
+            scene.background = skyColor;
+            scene.fog.color = skyColor;
 
             // 1. Update Terrain
             for (let i = 0; i < count; i++) {
@@ -700,7 +731,7 @@
 
         window.addEventListener('scroll', () => {
             const scrollY = window.scrollY;
-            targetFlyOverY = scrollY * 0.1; 
+            targetFlyOverY = scrollY * 0.25; 
             
             const startFade = 100;
             const endFade = 600;
@@ -718,86 +749,61 @@
 
         animate();
 
-        // --- 8. Real-time Submission Feed (Mock) ---
-        
+        // --- 8. Real-time Submission Feed (Random/Center) ---
         const feedContainer = document.getElementById('feed-container');
         
         const mockUsers = ["Alex_Dev", "TorchWiz", "SarahAI", "DeepLearner99", "GridRunner", "TensorFlowFan", "KerasKid", "LlamaLover"];
         const mockModules = ["Module 01: Tensor Basics", "Module 02: Autograd", "Module 03: CNNs", "Module 04: RNNs", "Module 05: Transformers", "Module 06: Diffusion"];
 
         function spawnNotification() {
-            // 1. Create Data
             const user = mockUsers[Math.floor(Math.random() * mockUsers.length)];
             const mod = mockModules[Math.floor(Math.random() * mockModules.length)];
             
-            // 2. Determine "Depth" (0.0 = Far, 1.0 = Close)
-            // This controls scale and position relative to horizon
             const depth = Math.random(); 
 
-            // 3. Create Element
             const el = document.createElement('div');
             el.className = 'feed-cloud';
             el.innerHTML = `<span class="username">${user}</span> just submitted <span class="module">${mod}</span>`;
             
-            // 4. Calculate 3D-like positioning
-            // Vanishing point is roughly center screen (50% W, 40% H)
             const vanishX = 50;
             const vanishY = 40;
             
-            // Random direction from center (0 to 360 degrees)
             const angle = Math.random() * Math.PI * 2;
             
-            // Distance from center:
-            // MODIFIED: Increased minDist to 35 to push notifications to the outer edges
-            const maxDist = 55; // Max % distance from center
-            const minDist = 30; // Min % distance (Keep center clear)
+            const maxDist = 45; 
+            const minDist = 5; 
             const dist = minDist + (depth * (maxDist - minDist));
             
-            // Convert polar to cartesian offsets
             const offsetX = Math.cos(angle) * dist; 
             const offsetY = Math.sin(angle) * dist; 
             
-            const leftPos = vanishX + offsetX; // %
-            const topPos = vanishY + offsetY;  // %
+            const leftPos = vanishX + offsetX; 
+            const topPos = vanishY + offsetY;  
 
-            // 5. Apply Depth Styles
-            // Scale: Far = 0.6, Close = 1.0
             const scale = 0.6 + (depth * 0.4);
-            // Opacity: Far = 0.7 (visible!), Close = 1.0
             const opacity = 0.7 + (depth * 0.3);
             
-            // NO BLUR (removed for legibility)
-
             el.style.left = leftPos + '%';
             el.style.top = topPos + '%';
-            
-            // Store target styles to animate to
-            // Start slightly smaller for pop-in effect
             el.style.transform = `scale(${scale * 0.8})`; 
 
-            // 6. Append
             feedContainer.appendChild(el);
 
-            // 7. Animation Trigger
             requestAnimationFrame(() => {
-                // Apply final visibility styles
                 el.style.opacity = opacity;
                 el.style.transform = `scale(${scale})`;
             });
 
-            // 8. Remove after delay
             setTimeout(() => {
                 el.style.opacity = 0;
-                el.style.transform = `scale(${scale * 1.1})`; // Fade out expansion
+                el.style.transform = `scale(${scale * 1.1})`; 
                 setTimeout(() => {
                     if (el.parentNode) el.parentNode.removeChild(el);
-                }, 2000); // Wait for transition
+                }, 2000); 
             }, 5000); 
         }
 
-        // Loop to spawn randomly
         function startFeedLoop() {
-            // Less frequency: 4s to 10s delay
             const nextDelay = 4000 + Math.random() * 6000; 
             setTimeout(() => {
                 spawnNotification();
@@ -805,7 +811,6 @@
             }, nextDelay);
         }
 
-        // Start the feed
         startFeedLoop();
 
     </script>
