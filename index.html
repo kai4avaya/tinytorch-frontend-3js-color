@@ -409,6 +409,7 @@
     <script id="sky-fs" type="x-shader/x-fragment">
         uniform float uTime;
         uniform vec3 uColor;
+        uniform float uCloudDramatic; // 1.0 for day (dramatic), 0.0 for night (calm)
         varying vec2 vUv;
         varying vec3 vWorldPosition;
 
@@ -508,8 +509,8 @@
             // Use normalized world position for seamless sampling on the sphere
             vec3 pos = normalize(vWorldPosition);
             
-            // Create movement
-            vec3 motion = vec3(uTime * 0.1, 0.0, 0.0);
+            // Create movement (slowed down further)
+            vec3 motion = vec3(uTime * 0.02, 0.0, 0.0);
             
             // Texture warping for liquid feel (3D)
             vec3 warp = vec3(
@@ -524,14 +525,20 @@
             // Normalize roughly 0 to 1
             float cloudVal = (n + 1.0) * 0.5;
             
-            // High Contrast Shaping
-            cloudVal = smoothstep(0.4, 0.7, cloudVal);
+            // High Contrast Shaping (Adjusted by dramatic factor)
+            // When uCloudDramatic is high, contrast is high (0.4, 0.7)
+            // When uCloudDramatic is low, contrast is low and softer (e.g., 0.3, 0.8)
+            float dramFactor = (1.0 - uCloudDramatic) * 0.2;
+            cloudVal = smoothstep(0.45 - dramFactor, 0.65 + dramFactor, cloudVal);
 
             // Base colors
             vec3 baseColor = uColor;
             
             // CLOUD HIGHLIGHT:
-            vec3 cloudHighlight = baseColor + vec3(0.4, 0.4, 0.45); 
+            // SQUARED uCloudDramatic to make non-dramatic times much more subtle/faint
+            // This ensures mid-dark levels have just a "hint" of cloud
+            float intensity = uCloudDramatic * uCloudDramatic;
+            vec3 cloudHighlight = baseColor + vec3(0.2, 0.2, 0.25) * intensity; 
             cloudHighlight = min(cloudHighlight, vec3(1.0));
 
             // Mix
@@ -632,7 +639,8 @@
             uniforms: {
                 uTime: { value: 0 },
                 // Updated background color (Brighter)
-                uColor: { value: new THREE.Color(0xf0f4f8) }
+                uColor: { value: new THREE.Color(0xf0f4f8) },
+                uCloudDramatic: { value: 1.0 } // Default to dramatic
             },
             side: THREE.BackSide,
             fog: false
@@ -741,15 +749,15 @@
 
         // Sky Cycle Colors (Updated for brighter start)
         const skyColors = [
-            { pos: 0, color: new THREE.Color(0xf0f4f8) },    // Morning (Bright)
-            { pos: 150, color: new THREE.Color(0x8a929a) },  // Noon (Medium Grey)
-            { pos: 300, color: new THREE.Color(0x5a626a) },  // Dusk (Dark Slate)
-            { pos: 450, color: new THREE.Color(0x2a323a) },  // Night (Deep Grey)
-            { pos: 550, color: new THREE.Color(0x5a626a) },  // Dawn
-            { pos: 700, color: new THREE.Color(0xf0f4f8) }   // Day (Bright)
+            { pos: 0, color: new THREE.Color(0xf0f4f8), dramatic: 1.0 },    // Morning (Bright, dramatic)
+            { pos: 150, color: new THREE.Color(0x8a929a), dramatic: 0.8 },  // Noon
+            { pos: 300, color: new THREE.Color(0x5a626a), dramatic: 0.3 },  // Dusk
+            { pos: 450, color: new THREE.Color(0x2a323a), dramatic: 0.1 },  // Night (Calm)
+            { pos: 550, color: new THREE.Color(0x5a626a), dramatic: 0.3 },  // Dawn
+            { pos: 700, color: new THREE.Color(0xf0f4f8), dramatic: 1.0 }   // Day (Bright, dramatic)
         ];
 
-        function getSkyColor(y) {
+        function getSkyState(y) {
             const cycle = 700; 
             const modY = y % cycle;
             for(let i=0; i<skyColors.length-1; i++) {
@@ -757,11 +765,16 @@
                 const next = skyColors[i+1];
                 if (modY >= curr.pos && modY < next.pos) {
                     const t = (modY - curr.pos) / (next.pos - curr.pos);
-                    return curr.color.clone().lerp(next.color, t);
+                    return {
+                        color: curr.color.clone().lerp(next.color, t),
+                        dramatic: lerp(t, curr.dramatic, next.dramatic)
+                    };
                 }
             }
-            return skyColors[0].color;
+            return { color: skyColors[0].color, dramatic: skyColors[0].dramatic };
         }
+        
+        function lerp(t, a, b) { return a + t * (b - a); }
 
         function getPathX(z) {
             return Math.sin(z * 0.1) * 8 + Math.cos(z * 0.03) * 12;
@@ -779,16 +792,17 @@
         function updateScene() {
             flyOverY += (targetFlyOverY - flyOverY) * 0.08;
 
-            const skyColor = getSkyColor(flyOverY);
+            const skyState = getSkyState(flyOverY);
             
             // Sync Fog, Sky Mesh
-            scene.fog.color.copy(skyColor);
-            skyMesh.material.uniforms.uColor.value.copy(skyColor);
-            // Faster time for rapid cloud movement
-            skyMesh.material.uniforms.uTime.value += 0.05; 
+            scene.fog.color.copy(skyState.color);
+            skyMesh.material.uniforms.uColor.value.copy(skyState.color);
+            skyMesh.material.uniforms.uCloudDramatic.value = skyState.dramatic;
+            // Slower time for cloud movement
+            skyMesh.material.uniforms.uTime.value += 0.01; 
             
             // Sync solid terrain color so the ground darkens with the sky cycle
-            terrainSolid.material.color.copy(skyColor);
+            terrainSolid.material.color.copy(skyState.color);
 
             for (let i = 0; i < count; i++) {
                 const ix = i * 3;
