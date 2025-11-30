@@ -275,86 +275,163 @@
             color: #bbb;
         }
 
-        /* --- Submission Feed Card --- */
-        #submission-card {
+        /* --- Generic Card Styles --- */
+        .feed-card {
             position: fixed;
-            bottom: 100px; 
-            left: 30px;    
-            width: 280px;
+            width: 300px; /* Slightly wider */
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(0,0,0,0.1);
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             z-index: 100;
-            transform: translateX(-150%); /* Hidden to the left initially */
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Content Styling */
+        .card-header {
+            padding: 12px 15px;
+            font-family: 'Verdana', sans-serif;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feed-list {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .feed-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-family: 'Verdana', sans-serif;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            line-height: 1.4;
+        }
+        
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+
+        /* --- 1. Process Card (Right, Lower Middle) --- */
+        #process-card {
+            top: 45vh; /* Lower Middle */
+            right: 30px;
+            transform: translateX(150%);
+        }
+
+        #process-card.visible {
+            transform: translateX(0);
+        }
+
+        #process-card .card-header {
+            background: #ffe0b2; /* Light Orange */
+            color: #e65100;
+            border-bottom: 1px solid #ffcc80;
+        }
+        
+        /* Updated Process List Styling */
+        .process-list {
+            counter-reset: step-counter; 
+        }
+
+        /* Specific override for process card items */
+        #process-card .feed-item {
+            justify-content: flex-start; 
+            gap: 15px; 
+            
+            /* Removed staggered entry opacity/transform */
+            opacity: 1; 
+            transform: translateX(0);
+            
+            /* Add transition for the Active Highlight effect */
+            transition: all 0.3s ease; 
+            border-left: 4px solid transparent; /* Prep for active border */
+        }
+
+        /* Active Highlighting State (Scroll Driven) */
+        #process-card .feed-item.active-step {
+            background: #fff8e1; /* Very light orange tint */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Strong shadow */
+            transform: scale(1.03) translateX(5px); /* Pop out */
+            border-left: 4px solid #ff6600; /* Orange indicator */
+            color: #e65100;
+            font-weight: bold;
+            z-index: 10; /* Ensure it stays on top */
+        }
+
+        /* Numbers styling */
+        #process-card .feed-item::before {
+            content: counter(step-counter) ".";
+            counter-increment: step-counter;
+            color: #ff6600; 
+            font-weight: bold;
+            min-width: 15px; 
+            flex-shrink: 0; 
+        }
+
+        /* --- 2. Submission Feed Card (Left) --- */
+        #submission-card {
+            bottom: 100px; 
+            left: 30px;    
+            transform: translateX(-150%); /* Hidden Left */
         }
 
         #submission-card.visible {
             transform: translateX(0);
         }
 
-        .card-header {
-            /* Updated to pale writing-pad green */
-            background: #dcedc8; 
-            color: #33691e; /* Dark green text for contrast */
-            padding: 10px 15px;
-            font-family: 'Verdana', sans-serif;
-            font-weight: bold;
-            font-size: 0.85rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        #submission-card .card-header {
+            background: #dcedc8; /* Pale Green */
+            color: #33691e;
             border-bottom: 1px solid #c5e1a5;
         }
 
-        .submission-list {
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            max-height: 250px;
-            overflow: hidden; 
+        /* --- 3. News Feed Card (Right) --- */
+        #news-card {
+            top: 30vh; 
+            right: 30px;
+            transform: translateX(150%); /* Hidden Right */
         }
 
-        .submission-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid #f0f0f0;
-            font-family: 'Verdana', sans-serif;
-            font-size: 0.75rem;
+        #news-card.visible {
+            transform: translateX(0);
+        }
+
+        #news-card .card-header {
+            background: #dbe9f4; /* Washed out Blue */
+            color: #2c5282;
+            border-bottom: 1px solid #bfd3e6;
+        }
+
+        /* Submission Specifics */
+        .sub-user { font-weight: bold; color: #003366; }
+        .sub-module { color: #666; font-style: italic; text-align: right; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* News Specifics */
+        .news-link {
+            text-decoration: none;
+            color: #333;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: slideInRow 0.4s ease-out;
-            background: white;
+            flex-direction: column;
+            width: 100%;
         }
-
-        .submission-item:last-child {
-            border-bottom: none;
-        }
-
-        .sub-user {
-            font-weight: bold;
-            color: #003366;
-        }
-
-        .sub-module {
-            color: #666;
-            font-style: italic;
-            text-align: right;
-            max-width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        @keyframes slideInRow {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        .news-link:hover .news-title { color: #e65100; text-decoration: underline; }
+        .news-date { font-size: 0.7em; color: #999; margin-bottom: 2px; text-transform: uppercase; }
+        .news-title { font-weight: bold; font-size: 0.85rem; line-height: 1.2; }
 
         .ui-overlay {
             position: fixed;
@@ -426,14 +503,40 @@
         <div class="subtitle">Builder Community</div>
     </div>
 
-    <!-- Submission Feed Card -->
-    <div id="submission-card">
+    <!-- 1. The Journey/Process Card -->
+    <div id="process-card" class="feed-card">
+        <div class="card-header">
+            <span>The Journey</span>
+            <span style="font-size:0.7em; opacity:0.8;">GUIDE</span>
+        </div>
+        <ul class="feed-list process-list">
+            <li class="feed-item">Create Account & Track Progress</li>
+            <li class="feed-item">Build AI Infrastructure (Mimic PyTorch)</li>
+            <li class="feed-item">Connect with Global Builders</li>
+            <li class="feed-item">Join Hackathons & Earn Badges</li>
+            <li class="feed-item">Innovate in the AI Space</li>
+        </ul>
+    </div>
+
+    <!-- 2. Submission Feed Card (Left) -->
+    <div id="submission-card" class="feed-card">
         <div class="card-header">
             <span>Recent Submissions</span>
             <span style="font-size:0.7em; opacity:0.8;">LIVE</span>
         </div>
-        <ul class="submission-list" id="submission-list">
+        <ul class="feed-list" id="submission-list">
             <!-- Items injected by JS -->
+        </ul>
+    </div>
+
+    <!-- 3. News Feed Card (Right) -->
+    <div id="news-card" class="feed-card">
+        <div class="card-header">
+            <span>Recent News</span>
+            <span style="font-size:0.7em; opacity:0.8;">UPDATES</span>
+        </div>
+        <ul class="feed-list" id="news-list">
+            <!-- Fake News Items -->
         </ul>
     </div>
 
@@ -970,52 +1073,172 @@
             }
 
             // Show card logic
-            const card = document.getElementById('submission-card');
-            // Slide out after 50px, Slide BACK to left after 2000px
-            if (scrollY > 50 && scrollY < 2000) { 
-                card.classList.add('visible');
+            const processCard = document.getElementById('process-card');
+            const submissionCard = document.getElementById('submission-card');
+            const newsCard = document.getElementById('news-card');
+            
+            // Process: Show 50px - 1000px
+            // Logic to Highlight Rows based on scroll progress within this window
+            if (scrollY > 50 && scrollY < 1000) { 
+                processCard.classList.add('visible');
+                
+                // Highlight Logic
+                const start = 50;
+                const end = 1000;
+                const range = end - start;
+                const progress = (scrollY - start) / range; // 0.0 to 1.0
+                
+                // 5 Items, map progress to 0-4 index
+                const items = processCard.querySelectorAll('.feed-item');
+                const activeIndex = Math.floor(progress * items.length);
+                
+                items.forEach((item, index) => {
+                    if (index === activeIndex) {
+                        item.classList.add('active-step');
+                    } else {
+                        item.classList.remove('active-step');
+                    }
+                });
+
             } else {
-                card.classList.remove('visible');
+                processCard.classList.remove('visible');
+            }
+
+            // Submissions: Show 1000px - 2200px
+            if (scrollY >= 1000 && scrollY < 2200) { 
+                submissionCard.classList.add('visible');
+            } else {
+                submissionCard.classList.remove('visible');
+            }
+
+            // News: Show 2200px - 3800px (Slides in, then slides away)
+            if (scrollY >= 2200 && scrollY < 3800) {
+                newsCard.classList.add('visible');
+            } else {
+                newsCard.classList.remove('visible');
             }
         });
 
         animate();
 
-        // --- Feed (Card Version) ---
+        // --- Feed Logic ---
         const cardList = document.getElementById('submission-list');
-        const mockUsers = ["Alex_Dev", "TorchWiz", "SarahAI", "DeepLearner99", "GridRunner", "TensorFlowFan", "KerasKid", "LlamaLover"];
-        const mockModules = ["Module 01: Tensor Basics", "Module 02: Autograd", "Module 03: CNNs", "Module 04: RNNs", "Module 05: Transformers", "Module 06: Diffusion"];
+        const newsList = document.getElementById('news-list');
+        
+        let lastSubmissionData = null;
 
-        function addSubmissionRow() {
-            const user = mockUsers[Math.floor(Math.random() * mockUsers.length)];
-            const mod = mockModules[Math.floor(Math.random() * mockModules.length)];
-            
+        function addSubmissionRow(user, mod) {
             const li = document.createElement('li');
-            li.className = 'submission-item';
+            li.className = 'feed-item';
             li.innerHTML = `
                 <span class="sub-user">${user}</span>
                 <span class="sub-module">${mod}</span>
             `;
-            
-            // Prepend to list
-            cardList.insertBefore(li, cardList.firstChild);
-            
-            // Limit items
-            if (cardList.children.length > 5) {
-                cardList.removeChild(cardList.lastChild);
+            cardList.appendChild(li);
+        }
+
+        // --- News Logic (Tiny Torch Specific) ---
+        const NEWS_ITEMS = [
+            { date: "Dec 15", title: "New Module: Diffusion Models", link: "#" },
+            { date: "Nov 30", title: "Tiny Torch Community Meetup", link: "#" },
+            { date: "Nov 20", title: "Edge AI Foundation Course Live", link: "#" },
+            { date: "Nov 10", title: "Guest Lecture: Andrej Karpathy", link: "#" }
+        ];
+
+        function populateNews() {
+            newsList.innerHTML = '';
+            NEWS_ITEMS.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'feed-item';
+                li.innerHTML = `
+                    <a href="${item.link}" target="_blank" class="news-link">
+                        <span class="news-date">${item.date}</span>
+                        <span class="news-title">${item.title}</span>
+                    </a>
+                `;
+                newsList.appendChild(li);
+            });
+        }
+        
+        populateNews();
+
+        // --- Real Data Integration ---
+        
+        const API_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/get_recent_submitted";
+        
+        // Map DB IDs to UI Strings
+        const MODULE_MAP = {
+            "01": "01_tensor",
+            "02": "02_activations",
+            "03": "03_layers",
+            "04": "04_losses",
+            "05": "05_autograd",
+            "06": "06_optimizers",
+            "07": "07_training",
+            "08": "08_spatial",
+            "09": "09_dataloader",
+            "10": "10_tokenization",
+            "11": "11_embeddings",
+            "12": "12_attention",
+            "13": "13_transformers",
+            "14": "14_profiling",
+            "15": "15_acceleration",
+            "16": "16_quantization",
+            "17": "17_compression",
+            "18": "18_caching",
+            "19": "19_benchmarking",
+            "20": "20_capstone",
+            "21": "21_mlops"
+        };
+
+        async function fetchRealSubmissions() {
+            try {
+                // Fetch top 5 recent submissions
+                const response = await fetch(`${API_URL}?limit=5`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                processRealData(data);
+
+            } catch (error) {
+                console.error("Error fetching submissions:", error);
             }
         }
 
-        function startFeedLoop() {
-            // Slower feed: 3s to 8s
-            const nextDelay = 3000 + Math.random() * 5000; 
-            setTimeout(() => {
-                addSubmissionRow();
-                startFeedLoop();
-            }, nextDelay);
+        function processRealData(data) {
+            // Check if data changed to avoid redraws
+            const currentHash = JSON.stringify(data);
+            if (currentHash === lastSubmissionData) return;
+            
+            lastSubmissionData = currentHash;
+            
+            // Clear the existing list
+            cardList.innerHTML = '';
+
+            data.forEach(row => {
+                const username = row.username || "Anonymous";
+                
+                // Get the last completed module ID (most recent)
+                const lastId = row.completed_ids && row.completed_ids.length > 0 
+                    ? row.completed_ids[row.completed_ids.length - 1] 
+                    : 1;
+                
+                // Format ID to match map keys (e.g. 1 -> "01")
+                const idKey = String(lastId).padStart(2, '0');
+                
+                // Lookup or fallback
+                const modName = MODULE_MAP[idKey] || `Module ${lastId}`;
+
+                addSubmissionRow(username, modName);
+            });
         }
 
-        startFeedLoop();
+        // Start Polling
+        fetchRealSubmissions(); // Initial fetch
+        setInterval(fetchRealSubmissions, 10000); // Poll every 10 seconds
 
     </script>
 </body>
