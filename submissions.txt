@@ -1,0 +1,186 @@
+To replicate the functionality of your Python CLI script in a pure HTML/CSS/JS environment (hosted on
+  GitHub Pages), you would use the Supabase JavaScript Client via a CDN.
+
+  Since your Python script sends data directly to a Supabase Edge Function (.../upload-progress), your
+  static website can do the exact same thing using the standard browser fetch API, provided it has the
+  Authentication Token.
+
+  Here is how you can translate the logic.
+
+  The "Pure" HTML/JS Implementation
+
+  You would create an index.html file. This single file handles:
+   1. Auth: Logging in directly with Supabase (replaces tito login).
+   2. Assembly: Creating the JSON payload (replaces assemble_payload).
+   3. Submission: POSTing to the Edge Function (replaces sync_progress).
+
+     1 <!DOCTYPE html>
+     2 <html lang="en">
+     3 <head>
+     4     <meta charset="UTF-8">
+     5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     6     <title>TinyTorch Static Sync</title>
+     7     <!-- 1. Load Supabase from CDN -->
+     8     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     9     <style>
+    10         body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 
+       1rem; background: #111; color: #eee; }
+    11         input { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; background: 
+       #222; border: 1px solid #444; color: white; }
+    12         button { padding: 0.5rem 1rem; cursor: pointer; background: #fff; color: #000; border: 
+       none; font-weight: bold; }
+    13         button:hover { background: #ccc; }
+    14         #logs { margin-top: 2rem; white-space: pre-wrap; font-family: monospace; color: #888; }
+    15         .success { color: #4ade80; }
+    16         .error { color: #f87171; }
+    17     </style>
+    18 </head>
+    19 <body>
+    20 
+    21     <h1>TinyTorch Sync</h1>
+    22 
+    23     <div id="login-form">
+    24         <input type="email" id="email" placeholder="Email" />
+    25         <input type="password" id="password" placeholder="Password" />
+    26         <button onclick="handleLogin()">Log In</button>
+    27     </div>
+    28 
+    29     <div id="sync-area" style="display:none; margin-top: 2rem;">
+    30         <p>Logged in as: <span id="user-email"></span></p>
+    31         <button onclick="syncProgress()">🚀 Sync Progress</button>
+    32     </div>
+    33 
+    34     <div id="logs"></div>
+    35 
+    36     <script>
+    37         // 2. Initialize Supabase Client
+    38         // You need your Project URL and ANON KEY here (publicly safe to expose in static sites)
+    39         const SUPABASE_URL = 'https://zrvmjrxhokwwmjacyhpq.supabase.co';
+    40         const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_GOES_HERE'; 
+    41         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    42         
+    43         // The same URL used in your Python script
+    44         const EDGE_FUNCTION_URL = 
+       "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/upload-progress";
+    45 
+    46         const log = (msg, type='') => {
+    47             const logs = document.getElementById('logs');
+    48             logs.innerHTML += `<div class="${type}">> ${msg}</div>`;
+    49         };
+    50 
+    51         // 3. Handle Login (Replaces 'tito login')
+    52         async function handleLogin() {
+    53             const email = document.getElementById('email').value;
+    54             const password = document.getElementById('password').value;
+    55 
+    56             log("Attempting login...");
+    57             
+    58             const { data, error } = await supabase.auth.signInWithPassword({
+    59                 email: email,
+    60                 password: password,
+    61             });
+    62 
+    63             if (error) {
+    64                 log("Login failed: " + error.message, 'error');
+    65             } else {
+    66                 log("Login successful!", 'success');
+    67                 document.getElementById('login-form').style.display = 'none';
+    68                 document.getElementById('sync-area').style.display = 'block';
+    69                 document.getElementById('user-email').innerText = data.user.email;
+    70             }
+    71         }
+    72 
+    73         // 4. Assemble Payload (Replaces Python 'assemble_payload')
+    74         function assemblePayload(userEmail) {
+    75             // In a real app, this data might come from LocalStorage or game state variables
+    76             return {
+    77                 "user_id": userEmail,
+    78                 "timestamp": new Date().toISOString(),
+    79                 "version": "1.0-web",
+    80                 "module_progress": {
+    81                     "total_modules": 20,
+    82                     "completed_count": 2, // Example data
+    83                     "completed_modules": ["01_tensor_basics", "02_autograd"],
+    84                     "completion_percentage": 10.0
+    85                 },
+    86                 "milestone_progress": {
+    87                     "total_milestones": 6,
+    88                     "unlocked_count": 1,
+    89                     "unlocked_milestones": [
+    90                         {
+    91                             "id": "01", 
+    92                             "name": "1957: Perceptron", 
+    93                             "unlocked_at": new Date().toISOString(),
+    94                             "completed": true
+    95                         }
+    96                     ]
+    97                 },
+    98                 "statistics": {
+    99                     "current_streak_days": 5
+   100                 }
+   101             };
+   102         }
+   103 
+   104         // 5. Sync Progress (Replaces Python 'sync_progress')
+   105         async function syncProgress() {
+   106             log("Assembling payload...");
+   107             
+   108             // Get the current session to retrieve the Access Token
+   109             const { data: { session } } = await supabase.auth.getSession();
+   110             
+   111             if (!session) {
+   112                 log("No active session. Please refresh.", 'error');
+   113                 return;
+   114             }
+   115 
+   116             const payload = assemblePayload(session.user.email);
+   117             
+   118             log("Syncing with TinyTorch Cloud...");
+   119 
+   120             try {
+   121                 // Standard JS Fetch
+   122                 const response = await fetch(EDGE_FUNCTION_URL, {
+   123                     method: 'POST',
+   124                     headers: {
+   125                         'Content-Type': 'application/json',
+   126                         // This is the critical part: passing the JWT token
+   127                         'Authorization': `Bearer ${session.access_token}`
+   128                     },
+   129                     body: JSON.stringify(payload)
+   130                 });
+   131 
+   132                 const result = await response.json();
+   133 
+   134                 if (response.ok) {
+   135                     log(`Sync Successful! Modules: ${result.synced_modules || 'N/A'}`, 'success')
+   136                 } else {
+   137                     log(`Server Error: ${result.error || response.statusText}`, 'error');
+   138                 }
+   139             } catch (err) {
+   140                 log(`Network Error: ${err.message}`, 'error');
+   141             }
+   142         }
+   143     </script>
+   144 </body>
+   145 </html>
+
+  Key Differences & Translations
+
+   1. Authentication (`urllib` vs `supabase-js`):
+       * Python: Manually manages tokens, refreshing, and header construction.
+       * JS: The supabase-js library handles the session state, auto-refreshing tokens, and interacting
+         with LocalStorage automatically.
+
+   2. Networking (`urllib.request` vs `fetch`):
+       * Python: Uses urllib.request to POST data.
+       * JS: Uses the browser native fetch API.
+
+   3. Payload Logic:
+       * Python: Reads from progress.json on the disk.
+       * JS: Reads from wherever your web app stores state (likely localStorage, sessionStorage, or
+         memory variables).
+
+   4. CORS (Cross-Origin Resource Sharing):
+       * Your Supabase Edge Function must be configured to allow requests from your GitHub Pages domain
+         (e.g., yourname.github.io), or allow all origins (*) in its generic OPTIONS handling, or else
+         the browser will block the request.

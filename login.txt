@@ -1,0 +1,116 @@
+✦ Based on your file app/api/auth/login/route.ts, your API returns a clean JSON object containing the
+  access_token. This makes it very easy to consume from a static website.
+
+  Here is exactly how to handle the Login, Token Storage, and Logout, along with a critical required
+  change to your API to allow it to work.
+
+  1. The JavaScript Implementation
+
+  You can use this JavaScript in your pure HTML/CSS/JS project.
+
+    1 // Configuration
+    2 const API_BASE_URL = "https://your-production-domain.com"; // Your Next.js app URL
+    3 
+    4 /**
+    5  * 1. LOGIN & SAVE TOKEN
+    6  */
+    7 async function login(email, password) {
+    8   try {
+    9     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+   10       method: "POST",
+   11       headers: {
+   12         "Content-Type": "application/json",
+   13       },
+   14       body: JSON.stringify({ email, password }),
+   15     });
+   16 
+   17     const data = await response.json();
+   18 
+   19     if (!response.ok) {
+   20       throw new Error(data.error || "Login failed");
+   21     }
+   22 
+   23     // --- CRITICAL STEP: SAVE THE TOKEN ---
+   24     // We store the token in localStorage so it persists if the user closes the tab.
+   25     if (data.access_token) {
+   26       localStorage.setItem("tinytorch_token", data.access_token);
+   27       localStorage.setItem("tinytorch_user", JSON.stringify(data.user));
+   28       console.log("Logged in successfully!");
+   29       return true;
+   30     }
+   31   } catch (error) {
+   32     console.error("Error logging in:", error);
+   33     alert("Login failed: " + error.message);
+   34     return false;
+   35   }
+   36 }
+   37 
+   38 /**
+   39  * 2. MAKE AUTHENTICATED REQUESTS (Using the saved token)
+   40  * Use this pattern to submit data or fetch private data
+   41  */
+   42 async function submitData(payload) {
+   43   // Retrieve the token
+   44   const token = localStorage.getItem("tinytorch_token");
+   45 
+   46   if (!token) {
+   47     console.error("No token found. User is not logged in.");
+   48     return;
+   49   }
+   50 
+   51   const response = await fetch(`${API_BASE_URL}/api/submissions`, {
+   52     method: "POST", // Ensure your API has a POST handler
+   53     headers: {
+   54       "Content-Type": "application/json",
+   55       // --- CRITICAL STEP: ATTACH TOKEN ---
+   56       "Authorization": `Bearer ${token}`
+   57     },
+   58     body: JSON.stringify(payload),
+   59   });
+   60   
+   61   // ... handle response
+   62 }
+   63 
+   64 /**
+   65  * 3. LOGOUT
+   66  */
+   67 function logout() {
+   68   // Simply remove the items from storage
+   69   localStorage.removeItem("tinytorch_token");
+   70   localStorage.removeItem("tinytorch_user");
+   71   
+   72   // Update UI or redirect
+   73   console.log("Logged out.");
+   74   window.location.reload();
+   75 }
+   76 
+   77 // Check if user is already logged in on page load
+   78 function checkSession() {
+   79   const token = localStorage.getItem("tinytorch_token");
+   80   if (token) {
+   81     console.log("User is logged in via localStorage");
+   82     // You might want to validate the token expiration here if you want to be fancy
+   83   }
+   84 }
+
+  2. Critical: Enabling CORS
+
+  I noticed your app/api/auth/login/route.ts does not have CORS headers. Because your pure HTML app
+  (e.g., on GitHub Pages) is on a different domain than your API, the login request will fail unless you
+  update the route.
+
+  You need to update app/api/auth/login/route.ts to allow cross-origin requests, similar to how your
+  submissions route does it.
+
+  Do you want me to apply the CORS headers to your login route now so this will work?
+
+> can you update this without breaking anything
+
+✦ I will add the necessary CORS headers to your app/api/auth/login/route.ts file. This includes adding
+  an OPTIONS handler for pre-flight requests and updating the POST response with
+  Access-Control-Allow-Origin, Access-Control-Allow-Methods, and Access-Control-Allow-Headers.
+
+  Here's the plan:
+   1. Add an OPTIONS function to app/api/auth/login/route.ts to handle CORS preflight requests.
+   2. Modify the POST function in app/api/auth/login/route.ts to include the CORS headers in the
+      NextResponse.
