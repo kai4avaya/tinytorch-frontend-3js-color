@@ -70,6 +70,9 @@
             transition: opacity 0.8s ease, transform 0.3s ease;
             width: 140px; 
             border-radius: 8px;
+            /* Fix: Start off-screen to prevent bunching at 0,0 */
+            top: -1000px;
+            left: -1000px;
         }
         
         .milestone-label:hover {
@@ -83,12 +86,11 @@
             opacity: 1;
         }
 
-        .milestone-label.future {
-            opacity: 0.4;
-        }
+        /* Fix: Only apply opacity to future labels when they are also visible */
         .milestone-label.future.visible {
             opacity: 0.4; 
         }
+        
         .milestone-label.future:hover {
             opacity: 1; 
         }

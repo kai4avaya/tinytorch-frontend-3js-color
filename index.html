@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI History Landscape</title>
+    <title>ai history landscape</title>
     <style>
         body {
             margin: 0;
             overflow-x: hidden;
             background-color: #f0f0f0; 
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'courier new', courier, monospace;
         }
 
         #canvas-container {
@@ -31,7 +31,7 @@
             pointer-events: none;
         }
 
-        /* --- Hero Title Section --- */
+        /* --- hero title section --- */
         #hero-title {
             position: fixed;
             top: 40%;
@@ -68,7 +68,7 @@
         }
 
         .logo-tiny {
-            font-family: 'Verdana', sans-serif;
+            font-family: 'verdana', sans-serif;
             font-size: 2.5rem;
             color: #ff8c00;
             font-weight: bold;
@@ -76,7 +76,7 @@
         }
 
         .logo-torch {
-            font-family: 'Arial Black', 'Helvetica Inserat', sans-serif;
+            font-family: 'arial black', 'helvetica inserat', sans-serif;
             font-size: 5.5rem;
             color: #003366;
             text-transform: uppercase;
@@ -85,7 +85,7 @@
         }
 
         .subtitle {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'courier new', courier, monospace;
             font-size: 1.5rem;
             color: #555;
             letter-spacing: 2px;
@@ -96,7 +96,7 @@
             backdrop-filter: blur(2px);
         }
 
-        /* --- Hamburger Menu --- */
+        /* --- hamburger menu --- */
         .menu-btn {
             position: fixed;
             top: 30px;
@@ -123,22 +123,22 @@
         }
 
         .menu-btn.active span:nth-child(1) {
-            transform: translateY(10.5px) rotate(45deg);
+            transform: translatey(10.5px) rotate(45deg);
         }
         .menu-btn.active span:nth-child(2) {
             opacity: 0;
         }
         .menu-btn.active span:nth-child(3) {
-            transform: translateY(-10.5px) rotate(-45deg);
+            transform: translatey(-10.5px) rotate(-45deg);
         }
 
-        /* --- Create Account Button --- */
+        /* --- create account button --- */
         .login-btn {
             position: fixed;
             top: 30px;
             right: 30px;
             z-index: 100;
-            font-family: 'Verdana', sans-serif;
+            font-family: 'verdana', sans-serif;
             font-size: 0.95rem;
             font-weight: bold;
             color: rgba(30, 30, 30, 0.8); 
@@ -163,10 +163,10 @@
         .login-icon {
             width: 18px;
             height: 18px;
-            fill: currentColor;
+            fill: currentcolor;
         }
 
-        /* Slide-out Sidebar */
+        /* slide-out sidebar */
         .sidebar {
             position: fixed;
             top: 0;
@@ -176,7 +176,7 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             z-index: 90;
-            transform: translateX(-100%);
+            transform: translatex(-100%);
             transition: transform 0.3s ease-in-out;
             box-shadow: 2px 0 15px rgba(0,0,0,0.1);
             display: flex;
@@ -186,11 +186,11 @@
         }
 
         .sidebar.active {
-            transform: translateX(0);
+            transform: translatex(0);
         }
 
         .nav-item {
-            font-family: 'Verdana', sans-serif;
+            font-family: 'verdana', sans-serif;
             font-size: 1.5rem;
             color: #333;
             text-decoration: none;
@@ -203,7 +203,7 @@
             color: #ff6600;
         }
 
-        /* --- Markers --- */
+        /* --- markers --- */
         #markers-container {
             position: fixed;
             top: 0;
@@ -275,10 +275,10 @@
             color: #bbb;
         }
 
-        /* --- Generic Card Styles --- */
+        /* --- generic card styles --- */
         .feed-card {
             position: fixed;
-            width: 300px; /* Slightly wider */
+            width: 300px; 
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(0,0,0,0.1);
@@ -291,10 +291,10 @@
             flex-direction: column;
         }
 
-        /* Content Styling */
+        /* content styling */
         .card-header {
             padding: 12px 15px;
-            font-family: 'Verdana', sans-serif;
+            font-family: 'verdana', sans-serif;
             font-weight: bold;
             font-size: 0.9rem;
             display: flex;
@@ -313,7 +313,7 @@
         .feed-item {
             padding: 12px 15px;
             border-bottom: 1px solid #f0f0f0;
-            font-family: 'Verdana', sans-serif;
+            font-family: 'verdana', sans-serif;
             font-size: 0.8rem;
             display: flex;
             justify-content: space-between;
@@ -326,102 +326,108 @@
             border-bottom: none;
         }
 
-        /* --- 1. Process Card (Right, Lower Middle) --- */
+        /* --- 1. the journey card (right) --- */
         #process-card {
-            top: 45vh; /* Lower Middle */
+            top: 45vh; 
             right: 30px;
-            transform: translateX(150%);
+            left: auto; /* ensure no conflict */
+            transform: translatex(150%);
         }
 
         #process-card.visible {
-            transform: translateX(0);
+            transform: translatex(0);
         }
 
         #process-card .card-header {
-            background: #ffe0b2; /* Light Orange */
-            color: #e65100;
-            border-bottom: 1px solid #ffcc80;
+            background: transparent; 
+            color: #333; 
+            border-bottom: 1px solid rgba(0,0,0,0.1);
         }
         
-        /* Updated Process List Styling */
-        .process-list {
-            counter-reset: step-counter; 
-        }
-
-        /* Specific override for process card items */
         #process-card .feed-item {
             justify-content: flex-start; 
             gap: 15px; 
-            
-            /* Removed staggered entry opacity/transform */
+            min-height: 50px; 
             opacity: 1; 
-            transform: translateX(0);
-            
-            /* Add transition for the Active Highlight effect */
+            transform: translatex(0);
             transition: all 0.3s ease; 
-            border-left: 4px solid transparent; /* Prep for active border */
+            border-left: 4px solid transparent; 
         }
 
-        /* Active Highlighting State (Scroll Driven) */
         #process-card .feed-item.active-step {
-            background: #fff8e1; /* Very light orange tint */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Strong shadow */
-            transform: scale(1.03) translateX(5px); /* Pop out */
-            border-left: 4px solid #ff6600; /* Orange indicator */
-            color: #e65100;
+            background: #f0f4f8; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+            transform: scale(1.03) translatex(5px); 
+            border-left: 4px solid #2a323a; 
+            color: #2a323a;
             font-weight: bold;
-            z-index: 10; /* Ensure it stays on top */
+            z-index: 10; 
         }
 
-        /* Numbers styling */
         #process-card .feed-item::before {
-            content: counter(step-counter) ".";
-            counter-increment: step-counter;
-            color: #ff6600; 
-            font-weight: bold;
-            min-width: 15px; 
-            flex-shrink: 0; 
+            content: '';
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #ccc; 
+            flex-shrink: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
         }
 
-        /* --- 2. Submission Feed Card (Left) --- */
-        #submission-card {
-            bottom: 100px; 
-            left: 30px;    
-            transform: translateX(-150%); /* Hidden Left */
+        #process-card .feed-item.active-step::before {
+            border-color: #ff6600;
+            border-top-color: transparent; 
+            animation: spin 1s linear infinite;
         }
 
-        #submission-card.visible {
-            transform: translateX(0);
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        #submission-card .card-header {
-            background: #dcedc8; /* Pale Green */
+        /* --- 2. news feed card (left) --- */
+        #news-card {
+            top: 30vh; 
+            left: 30px; 
+            right: auto;
+            transform: translatex(-150%); 
+        }
+
+        #news-card.visible {
+            transform: translatex(0);
+        }
+
+        #news-card .card-header {
+            background: #dcedc8; 
             color: #33691e;
             border-bottom: 1px solid #c5e1a5;
         }
 
-        /* --- 3. News Feed Card (Right) --- */
-        #news-card {
-            top: 30vh; 
-            right: 30px;
-            transform: translateX(150%); /* Hidden Right */
+        /* --- 3. submission feed card (left - appears after news) --- */
+        #submission-card {
+            display: flex; 
+            top: 30vh; /* same vertical position as news for continuity */
+            left: 30px;    
+            right: auto;
+            transform: translatex(-150%); 
         }
 
-        #news-card.visible {
-            transform: translateX(0);
+        #submission-card.visible {
+            transform: translatex(0);
         }
 
-        #news-card .card-header {
-            background: #dbe9f4; /* Washed out Blue */
-            color: #2c5282;
-            border-bottom: 1px solid #bfd3e6;
+        #submission-card .card-header {
+            background: #dcedc8; /* same green as news */
+            color: #33691e;
+            border-bottom: 1px solid #c5e1a5;
         }
 
-        /* Submission Specifics */
+        /* submission specifics */
         .sub-user { font-weight: bold; color: #003366; }
         .sub-module { color: #666; font-style: italic; text-align: right; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* News Specifics */
+        /* news specifics */
         .news-link {
             text-decoration: none;
             color: #333;
@@ -429,7 +435,7 @@
             flex-direction: column;
             width: 100%;
         }
-        .news-link:hover .news-title { color: #e65100; text-decoration: underline; }
+        .news-link:hover .news-title { color: #33691e; text-decoration: underline; }
         .news-date { font-size: 0.7em; color: #999; margin-bottom: 2px; text-transform: uppercase; }
         .news-title { font-weight: bold; font-size: 0.85rem; line-height: 1.2; }
 
@@ -437,7 +443,7 @@
             position: fixed;
             bottom: 30px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translatex(-50%);
             z-index: 10;
             color: #333;
             text-align: center;
@@ -451,92 +457,93 @@
             border: 1px solid rgba(0,0,0,0.05);
         }
     </style>
-    <!-- Load Three.js -->
+    <!-- load three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <button class="menu-btn" id="menuBtn">
+    <button class="menu-btn" id="menubtn">
         <span></span>
         <span></span>
         <span></span>
     </button>
     
     <a href="#" class="login-btn">
-        <svg class="login-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        <svg class="login-icon" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="m12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
         </svg>
-        Create Account
+        create account
     </a>
 
     <nav class="sidebar" id="sidebar">
-        <a href="#" class="nav-item">Home</a>
-        <a href="#" class="nav-item">About</a>
-        <a href="#" class="nav-item">Events</a>
-        <a href="#" class="nav-item">Community</a>
-        <a href="#" class="nav-item">Contact</a>
+        <a href="#" class="nav-item">home</a>
+        <a href="#" class="nav-item">about</a>
+        <a href="#" class="nav-item">events</a>
+        <a href="#" class="nav-item">community</a>
+        <a href="#" class="nav-item">contact</a>
     </nav>
 
     <div id="hero-title">
         <div class="logo-container">
-            <svg class="fire-icon" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+            <svg class="fire-icon" viewbox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <linearGradient id="fireGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <lineargradient id="firegrad" x1="0%" y1="100%" x2="0%" y2="0%">
                         <stop offset="0%" style="stop-color:#b30000;stop-opacity:1" />
                         <stop offset="40%" style="stop-color:#ff4500;stop-opacity:1" />
                         <stop offset="100%" style="stop-color:#ffcc00;stop-opacity:1" />
-                    </linearGradient>
-                    <mask id="flameHole">
+                    </lineargradient>
+                    <mask id="flamehole">
                         <rect x="0" y="0" width="100" height="130" fill="white" />
                         <ellipse cx="50" cy="80" rx="15" ry="20" fill="black" />
                     </mask>
                 </defs>
-                <path d="M50 125 C20 125 5 95 5 65 C5 35 30 5 50 0 C70 5 95 35 95 65 C95 95 80 125 50 125 Z" 
-                      fill="url(#fireGrad)" 
-                      mask="url(#flameHole)" />
+                <path d="m50 125 c20 125 5 95 5 65 c5 35 30 5 50 0 c70 5 95 35 95 65 c95 95 80 125 50 125 z" 
+                      fill="url(#firegrad)" 
+                      mask="url(#flamehole)" />
             </svg>
             <div class="logo-text">
                 <span class="logo-tiny">tiny</span>
-                <span class="logo-torch">TORCH</span>
+                <span class="logo-torch">torch</span>
             </div>
         </div>
-        <div class="subtitle">Builder Community</div>
+        <div class="subtitle">builder community</div>
     </div>
 
-    <!-- 1. The Journey/Process Card -->
+    <!-- 1. the journey/process card -->
     <div id="process-card" class="feed-card">
         <div class="card-header">
-            <span>The Journey</span>
-            <span style="font-size:0.7em; opacity:0.8;">GUIDE</span>
+            <span>the journey</span>
+            <span style="font-size:0.7em; opacity:0.8;">guide</span>
         </div>
         <ul class="feed-list process-list">
-            <li class="feed-item">Create Account & Track Progress</li>
-            <li class="feed-item">Build AI Infrastructure (Mimic PyTorch)</li>
-            <li class="feed-item">Connect with Global Builders</li>
-            <li class="feed-item">Join Hackathons & Earn Badges</li>
-            <li class="feed-item">Innovate in the AI Space</li>
+            <li class="feed-item">create account & track progress</li>
+            <li class="feed-item">clone & run tinytorch repo</li>
+            <li class="feed-item">build ai infrastructure (mimic pytorch)</li>
+            <li class="feed-item">connect with global builders</li>
+            <li class="feed-item">join hackathons & earn badges</li>
+            <li class="feed-item">innovate in the ai space</li>
         </ul>
     </div>
 
-    <!-- 2. Submission Feed Card (Left) -->
-    <div id="submission-card" class="feed-card">
-        <div class="card-header">
-            <span>Recent Submissions</span>
-            <span style="font-size:0.7em; opacity:0.8;">LIVE</span>
-        </div>
-        <ul class="feed-list" id="submission-list">
-            <!-- Items injected by JS -->
-        </ul>
-    </div>
-
-    <!-- 3. News Feed Card (Right) -->
+    <!-- 2. news feed card (left) -->
     <div id="news-card" class="feed-card">
         <div class="card-header">
-            <span>Recent News</span>
-            <span style="font-size:0.7em; opacity:0.8;">UPDATES</span>
+            <span>recent news</span>
+            <span style="font-size:0.7em; opacity:0.8;">updates</span>
         </div>
         <ul class="feed-list" id="news-list">
-            <!-- Fake News Items -->
+            <!-- fake news items -->
+        </ul>
+    </div>
+
+    <!-- 3. submission feed card (left - after news) -->
+    <div id="submission-card" class="feed-card">
+        <div class="card-header">
+            <span>recent submissions</span>
+            <span style="font-size:0.7em; opacity:0.8;">live</span>
+        </div>
+        <ul class="feed-list" id="submission-list">
+            <!-- items injected by js -->
         </ul>
     </div>
 
@@ -544,110 +551,81 @@
     <div id="scroll-track"></div>
     <div id="markers-container"></div>
     <div class="ui-overlay">
-        <span>Scroll to traverse the History of AI</span>
+        <span>scroll to traverse the history of ai</span>
     </div>
 
-    <!-- Sky Shader Vertex (Updated for 3D position) -->
+    <!-- sky shader vertex -->
     <script id="sky-vs" type="x-shader/x-vertex">
-        varying vec2 vUv;
-        varying vec3 vWorldPosition;
+        varying vec2 vuv;
+        varying vec3 vworldposition;
         void main() {
-            vUv = uv;
-            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-            vWorldPosition = worldPosition.xyz;
-            gl_Position = projectionMatrix * viewMatrix * worldPosition;
+            vuv = uv;
+            vec4 worldposition = modelmatrix * vec4(position, 1.0);
+            vworldposition = worldposition.xyz;
+            gl_position = projectionmatrix * viewmatrix * worldposition;
         }
     </script>
 
-    <!-- Sky Shader Fragment (Switched to 3D Noise) -->
+    <!-- sky shader fragment -->
     <script id="sky-fs" type="x-shader/x-fragment">
-        uniform float uTime;
-        uniform vec3 uColor;
-        uniform float uCloudDramatic; // 1.0 for day (dramatic), 0.0 for night (calm)
-        varying vec2 vUv;
-        varying vec3 vWorldPosition;
+        uniform float utime;
+        uniform vec3 ucolor;
+        uniform float uclouddramatic; 
+        varying vec2 vuv;
+        varying vec3 vworldposition;
 
-        // --- 3D Simplex Noise Functions ---
         vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
         vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
         vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-        vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+        vec4 taylorinvsqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
 
         float snoise(vec3 v){
-            const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-            const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-
-            // First corner
-            vec3 i  = floor(v + dot(v, C.yyy) );
-            vec3 x0 = v - i + dot(i, C.xxx) ;
-
-            // Other corners
+            const vec2  c = vec2(1.0/6.0, 1.0/3.0) ;
+            const vec4  d = vec4(0.0, 0.5, 1.0, 2.0);
+            vec3 i  = floor(v + dot(v, c.yyy) );
+            vec3 x0 = v - i + dot(i, c.xxx) ;
             vec3 g = step(x0.yzx, x0.xyz);
             vec3 l = 1.0 - g;
             vec3 i1 = min( g.xyz, l.zxy );
             vec3 i2 = max( g.xyz, l.zxy );
-
-            //   x0 = x0 - 0.0 + 0.0 * C.xxx;
-            //   x1 = x0 - i1  + 1.0 * C.xxx;
-            //   x2 = x0 - i2  + 2.0 * C.xxx;
-            //   x3 = x0 - 1.0 + 3.0 * C.xxx;
-            vec3 x1 = x0 - i1 + C.xxx;
-            vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
-            vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
-
-            // Permutations
+            vec3 x1 = x0 - i1 + c.xxx;
+            vec3 x2 = x0 - i2 + c.yyy; 
+            vec3 x3 = x0 - d.yyy;      
             i = mod289(i);
             vec4 p = permute( permute( permute(
                         i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
                     + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
                     + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-
-            // Gradients: 7x7 points over a square, mapped onto an octahedron.
-            // The ring size 17*17 = 289 is close to a multiple of 49 (49*6 = 294)
-            float n_ = 0.142857142857; // 1.0/7.0
-            vec3  ns = n_ * D.wyz - D.xzx;
-
-            vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
-
+            float n_ = 0.142857142857; 
+            vec3  ns = n_ * d.wyz - d.xzx;
+            vec4 j = p - 49.0 * floor(p * ns.z * ns.z); 
             vec4 x_ = floor(j * ns.z);
-            vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
-
+            vec4 y_ = floor(j - 7.0 * x_ );    
             vec4 x = x_ *ns.x + ns.yyyy;
             vec4 y = y_ *ns.x + ns.yyyy;
             vec4 h = 1.0 - abs(x) - abs(y);
-
             vec4 b0 = vec4( x.xy, y.xy );
             vec4 b1 = vec4( x.zw, y.zw );
-
-            //vec4 s0 = vec4(lessThan(b0,0.0))*2.0 - 1.0;
-            //vec4 s1 = vec4(lessThan(b1,0.0))*2.0 - 1.0;
             vec4 s0 = floor(b0)*2.0 + 1.0;
             vec4 s1 = floor(b1)*2.0 + 1.0;
             vec4 sh = -step(h, vec4(0.0));
-
             vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
             vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-
             vec3 p0 = vec3(a0.xy,h.x);
             vec3 p1 = vec3(a0.zw,h.y);
             vec3 p2 = vec3(a1.xy,h.z);
             vec3 p3 = vec3(a1.zw,h.w);
-
-            //Normalise gradients
-            vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+            vec4 norm = taylorinvsqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
             p0 *= norm.x;
             p1 *= norm.y;
             p2 *= norm.z;
             p3 *= norm.w;
-
-            // Mix final noise value
             vec4 m = max(0.5 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
             m = m * m;
             return 105.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
                                         dot(p2,x2), dot(p3,x3) ) );
         }
 
-        // Fractal Brownian Motion (3D)
         float fbm(vec3 p) {
             float value = 0.0;
             float amplitude = 0.5;
@@ -660,84 +638,62 @@
         }
 
         void main() {
-            // Use normalized world position for seamless sampling on the sphere
-            vec3 pos = normalize(vWorldPosition);
-            
-            // Create movement (slowed down further)
-            vec3 motion = vec3(uTime * 0.02, 0.0, 0.0);
-            
-            // Texture warping for liquid feel (3D)
+            vec3 pos = normalize(vworldposition);
+            vec3 motion = vec3(utime * 0.02, 0.0, 0.0);
             vec3 warp = vec3(
-                fbm(pos * 2.0 + vec3(uTime * 0.05)),
-                fbm(pos * 2.0 + vec3(uTime * 0.05 + 10.0)),
-                fbm(pos * 2.0 + vec3(uTime * 0.05 + 20.0))
+                fbm(pos * 2.0 + vec3(utime * 0.05)),
+                fbm(pos * 2.0 + vec3(utime * 0.05 + 10.0)),
+                fbm(pos * 2.0 + vec3(utime * 0.05 + 20.0))
             );
-
-            // Generate Noise
             float n = fbm(pos * 3.0 + motion + warp * 0.5);
-            
-            // Normalize roughly 0 to 1
-            float cloudVal = (n + 1.0) * 0.5;
-            
-            // High Contrast Shaping (Adjusted by dramatic factor)
-            // When uCloudDramatic is high, contrast is high (0.4, 0.7)
-            // When uCloudDramatic is low, contrast is low and softer (e.g., 0.3, 0.8)
-            float dramFactor = (1.0 - uCloudDramatic) * 0.2;
-            cloudVal = smoothstep(0.45 - dramFactor, 0.65 + dramFactor, cloudVal);
-
-            // Base colors
-            vec3 baseColor = uColor;
-            
-            // CLOUD HIGHLIGHT:
-            // SQUARED uCloudDramatic to make non-dramatic times much more subtle/faint
-            // This ensures mid-dark levels have just a "hint" of cloud
-            float intensity = uCloudDramatic * uCloudDramatic;
-            vec3 cloudHighlight = baseColor + vec3(0.2, 0.2, 0.25) * intensity; 
-            cloudHighlight = min(cloudHighlight, vec3(1.0));
-
-            // Mix without horizon mask (removed for full sphere wrapping)
-            vec3 finalColor = mix(baseColor, cloudHighlight, cloudVal);
-
-            gl_FragColor = vec4(finalColor, 1.0);
+            float cloudval = (n + 1.0) * 0.5;
+            float dramfactor = (1.0 - uclouddramatic) * 0.2;
+            cloudval = smoothstep(0.45 - dramfactor, 0.65 + dramfactor, cloudval);
+            vec3 basecolor = ucolor;
+            float intensity = uclouddramatic * uclouddramatic;
+            vec3 cloudhighlight = basecolor + vec3(0.2, 0.2, 0.25) * intensity; 
+            cloudhighlight = min(cloudhighlight, vec3(1.0));
+            vec3 finalcolor = mix(basecolor, cloudhighlight, cloudval);
+            gl_fragcolor = vec4(finalcolor, 1.0);
         }
     </script>
 
     <script>
-        const menuBtn = document.getElementById('menuBtn');
-        const sidebar = document.getElementById('sidebar');
+        const menubtn = document.getelementbyid('menubtn');
+        const sidebar = document.getelementbyid('sidebar');
         
-        menuBtn.addEventListener('click', () => {
-            menuBtn.classList.toggle('active');
-            sidebar.classList.toggle('active');
+        menubtn.addeventlistener('click', () => {
+            menubtn.classlist.toggle('active');
+            sidebar.classlist.toggle('active');
         });
 
-        // --- Configuration & Data ---
-        const MILESTONES = [
-            { year: 1958, name: "Perceptron", authors: "Frank Rosenblatt", z: -20 },
-            { year: 1969, name: "XOR Problem", authors: "Minsky & Papert", z: -50 },
-            { year: 1986, name: "Backprop / MLP", authors: "Rumelhart, Hinton, Williams", z: -90 },
-            { year: 1997, name: "Deep Blue", authors: "Feng-hsiung Hsu, Campbell", z: -130 },
-            { year: 1997, name: "LSTM", authors: "Hochreiter & Schmidhuber", z: -140 }, 
-            { year: 1998, name: "LeNet (CNN)", authors: "Yann LeCun et al.", z: -160 },
-            { year: 2012, name: "AlexNet", authors: "Krizhevsky, Sutskever, Hinton", z: -200 },
-            { year: 2013, name: "DQN (Deep RL)", authors: "Mnih et al. (DeepMind)", z: -215 },
-            { year: 2014, name: "GANs", authors: "Ian Goodfellow et al.", z: -230 },
-            { year: 2015, name: "ResNet", authors: "Kaiming He et al.", z: -245 }, 
-            { year: 2016, name: "AlphaGo", authors: "Silver, Hassabis (DeepMind)", z: -260 },
-            { year: 2017, name: "Transformer", authors: "Vaswani, Shazeer et al.", z: -280 },
-            { year: 2018, name: "BERT", authors: "Devlin et al. (Google)", z: -295 },
-            { year: 2018, name: "GPT-1", authors: "Radford et al. (OpenAI)", z: -310 },
-            { year: 2020, name: "GPT-3", authors: "Brown et al. (OpenAI)", z: -330 },
-            { year: 2022, name: "ChatGPT", authors: "OpenAI", z: -360 },
-            { year: 2022, name: "Stable Diffusion", authors: "Rombach et al. (CompVis)", z: -375 },
-            { year: 2023, name: "Mistral 7B", authors: "Mistral AI", z: -400 },
-            { year: 2023, name: "I-JEPA (World Model)", authors: "LeCun et al. (Meta)", z: -420 },
-            { year: 2023, name: "Phi-2", authors: "Microsoft Research", z: -440 },
-            { year: 2024, name: "Llama 3", authors: "Meta AI", z: -460 },
-            { year: 2024, name: "DeepSeek-V2", authors: "DeepSeek AI", z: -480 } 
+        // --- configuration & data ---
+        const milestones = [
+            { year: 1958, name: "perceptron", authors: "frank rosenblatt", z: -20 },
+            { year: 1969, name: "xor problem", authors: "minsky & papert", z: -50 },
+            { year: 1986, name: "backprop / mlp", authors: "rumelhart, hinton, williams", z: -90 },
+            { year: 1997, name: "deep blue", authors: "feng-hsiung hsu, campbell", z: -130 },
+            { year: 1997, name: "lstm", authors: "hochreiter & schmidhuber", z: -140 }, 
+            { year: 1998, name: "lenet (cnn)", authors: "yann lecun et al.", z: -160 },
+            { year: 2012, name: "alexnet", authors: "krizhevsky, sutskever, hinton", z: -200 },
+            { year: 2013, name: "dqn (deep rl)", authors: "mnih et al. (deepmind)", z: -215 },
+            { year: 2014, name: "gans", authors: "ian goodfellow et al.", z: -230 },
+            { year: 2015, name: "resnet", authors: "kaiming he et al.", z: -245 }, 
+            { year: 2016, name: "alphago", authors: "silver, hassabis (deepmind)", z: -260 },
+            { year: 2017, name: "transformer", authors: "vaswani, shazeer et al.", z: -280 },
+            { year: 2018, name: "bert", authors: "devlin et al. (google)", z: -295 },
+            { year: 2018, name: "gpt-1", authors: "radford et al. (openai)", z: -310 },
+            { year: 2020, name: "gpt-3", authors: "brown et al. (openai)", z: -330 },
+            { year: 2022, name: "chatgpt", authors: "openai", z: -360 },
+            { year: 2022, name: "stable diffusion", authors: "rombach et al. (compvis)", z: -375 },
+            { year: 2023, name: "mistral 7b", authors: "mistral ai", z: -400 },
+            { year: 2023, name: "i-jepa (world model)", authors: "lecun et al. (meta)", z: -420 },
+            { year: 2023, name: "phi-2", authors: "microsoft research", z: -440 },
+            { year: 2024, name: "llama 3", authors: "meta ai", z: -460 },
+            { year: 2024, name: "deepseek-v2", authors: "deepseek ai", z: -480 } 
         ];
 
-        const Noise = (function() {
+        const noise = (function() {
             var p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
             190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,
             68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
@@ -757,283 +713,283 @@
             }
             return {
                 perlin2: function(x, y) {
-                    var X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
-                    x -= Math.floor(x); y -= Math.floor(y);
+                    var x = math.floor(x) & 255, y = math.floor(y) & 255;
+                    x -= math.floor(x); y -= math.floor(y);
                     var u = fade(x), v = fade(y);
-                    var A = p[X]+Y, AA = p[A], AB = p[A+1], B = p[X+1]+Y, BA = p[B], BB = p[B+1];
-                    return lerp(v, lerp(u, grad(p[AA], x, y, 0), grad(p[BA], x-1, y, 0)),
-                                   lerp(u, grad(p[AB], x, y-1, 0), grad(p[BB], x-1, y-1, 0)));
+                    var a = p[x]+y, aa = p[a], ab = p[a+1], b = p[x+1]+y, ba = p[b], bb = p[b+1];
+                    return lerp(v, lerp(u, grad(p[aa], x, y, 0), grad(p[ba], x-1, y, 0)),
+                                   lerp(u, grad(p[ab], x, y-1, 0), grad(p[bb], x-1, y-1, 0)));
                 }
             };
         })();
 
-        // --- Scene Setup ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        // Updated background color (Brighter)
-        const initialBgColor = new THREE.Color(0xf0f4f8); 
+        // --- scene setup ---
+        const container = document.getelementbyid('canvas-container');
+        const scene = new three.scene();
+        // updated background color (brighter)
+        const initialbgcolor = new three.color(0xf0f4f8); 
         
-        // FOG Adjustment
-        scene.fog = new THREE.Fog(initialBgColor, 20, 90); 
+        // fog adjustment
+        scene.fog = new three.fog(initialbgcolor, 20, 90); 
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 150);
+        const camera = new three.perspectivecamera(60, window.innerwidth / window.innerheight, 0.1, 150);
         camera.position.set(0, 6, 12);
-        camera.rotation.x = -Math.PI / 6;
+        camera.rotation.x = -math.pi / 6;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
+        const renderer = new three.webglrenderer({ antialias: true });
+        renderer.setsize(window.innerwidth, window.innerheight);
+        renderer.setpixelratio(math.min(window.devicepixelratio, 2));
+        container.appendchild(renderer.domelement);
 
-        // --- Sky Mesh Setup ---
-        const skyGeo = new THREE.SphereGeometry(100, 64, 64);
-        const skyMat = new THREE.ShaderMaterial({
-            vertexShader: document.getElementById('sky-vs').textContent,
-            fragmentShader: document.getElementById('sky-fs').textContent,
+        // --- sky mesh setup ---
+        const skygeo = new three.spheregeometry(100, 64, 64);
+        const skymat = new three.shadermaterial({
+            vertexshader: document.getelementbyid('sky-vs').textcontent,
+            fragmentshader: document.getelementbyid('sky-fs').textcontent,
             uniforms: {
-                uTime: { value: 0 },
-                // Updated background color (Brighter)
-                uColor: { value: new THREE.Color(0xf0f4f8) },
-                uCloudDramatic: { value: 1.0 } // Default to dramatic
+                utime: { value: 0 },
+                // updated background color (brighter)
+                ucolor: { value: new three.color(0xf0f4f8) },
+                uclouddramatic: { value: 1.0 } // default to dramatic
             },
-            side: THREE.BackSide,
+            side: three.backside,
             fog: false
         });
-        const skyMesh = new THREE.Mesh(skyGeo, skyMat);
-        scene.add(skyMesh);
+        const skymesh = new three.mesh(skygeo, skymat);
+        scene.add(skymesh);
 
-        // --- Terrain ---
+        // --- terrain ---
         const width = 60;
         const depth = 80; 
-        const widthSegments = 80;
-        const depthSegments = 100;
+        const widthsegments = 80;
+        const depthsegments = 100;
 
-        const geometry = new THREE.PlaneGeometry(width, depth, widthSegments, depthSegments);
-        geometry.rotateX(-Math.PI / 2);
+        const geometry = new three.planegeometry(width, depth, widthsegments, depthsegments);
+        geometry.rotatex(-math.pi / 2);
 
         const count = geometry.attributes.position.count;
-        geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+        geometry.setattribute('color', new three.bufferattribute(new float32array(count * 3), 3));
 
-        const material = new THREE.MeshBasicMaterial({ 
-            vertexColors: true, 
+        const material = new three.meshbasicmaterial({ 
+            vertexcolors: true, 
             wireframe: true,
             transparent: true,
             opacity: 0.4
         });
 
-        const terrain = new THREE.Mesh(geometry, material);
+        const terrain = new three.mesh(geometry, material);
         scene.add(terrain);
 
-        // --- Solid Terrain Background (The Fix) ---
-        // Instead of a flat backdrop plane (which creates a horizon line),
-        // we create a solid mesh that shares the SAME geometry as the wireframe.
-        // This makes the hills opaque, blocking the sky behind them naturally.
-        const solidMat = new THREE.MeshBasicMaterial({
-            color: 0xf5f5f0, // Initial color
-            polygonOffset: true, 
-            polygonOffsetFactor: 1, // Push it back slightly so wireframe shows on top
-            polygonOffsetUnits: 1
+        // --- solid terrain background (the fix) ---
+        // instead of a flat backdrop plane (which creates a horizon line),
+        // we create a solid mesh that shares the same geometry as the wireframe.
+        // this makes the hills opaque, blocking the sky behind them naturally.
+        const solidmat = new three.meshbasicmaterial({
+            color: 0xf5f5f0, // initial color
+            polygonoffset: true, 
+            polygonoffsetfactor: 1, // push it back slightly so wireframe shows on top
+            polygonoffsetunits: 1
         });
-        const terrainSolid = new THREE.Mesh(geometry, solidMat);
-        scene.add(terrainSolid);
+        const terrainsolid = new three.mesh(geometry, solidmat);
+        scene.add(terrainsolid);
 
-        // --- Timeline Path ---
-        const historyLineGeo = new THREE.BufferGeometry();
-        const futureLineGeo = new THREE.BufferGeometry();
-        const linePoints = 400; 
-        historyLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePoints * 3), 3));
-        historyLineGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(linePoints * 3), 3));
-        futureLineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePoints * 3), 3));
+        // --- timeline path ---
+        const historylinegeo = new three.buffergeometry();
+        const futurelinegeo = new three.buffergeometry();
+        const linepoints = 400; 
+        historylinegeo.setattribute('position', new three.bufferattribute(new float32array(linepoints * 3), 3));
+        historylinegeo.setattribute('color', new three.bufferattribute(new float32array(linepoints * 3), 3));
+        futurelinegeo.setattribute('position', new three.bufferattribute(new float32array(linepoints * 3), 3));
         
-        const historyMat = new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 4 });
-        const futureMat = new THREE.LineDashedMaterial({ 
-            color: 0xff4500, dashSize: 0.5, gapSize: 0.3, scale: 1, linewidth: 2, opacity: 0.6, transparent: true
+        const historymat = new three.linebasicmaterial({ vertexcolors: true, linewidth: 4 });
+        const futuremat = new three.linedashedmaterial({ 
+            color: 0xff4500, dashsize: 0.5, gapsize: 0.3, scale: 1, linewidth: 2, opacity: 0.6, transparent: true
         });
 
-        const historyLine = new THREE.Line(historyLineGeo, historyMat);
-        const futureLine = new THREE.Line(futureLineGeo, futureMat);
-        futureLine.computeLineDistances();
+        const historyline = new three.line(historylinegeo, historymat);
+        const futureline = new three.line(futurelinegeo, futuremat);
+        futureline.computelinedistances();
         
-        const glowGeo = new THREE.BufferGeometry();
-        glowGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePoints * 3), 3));
-        const glowMat = new THREE.PointsMaterial({
+        const glowgeo = new three.buffergeometry();
+        glowgeo.setattribute('position', new three.bufferattribute(new float32array(linepoints * 3), 3));
+        const glowmat = new three.pointsmaterial({
             color: 0xff6600, size: 0.15, transparent: true, opacity: 0.8
         });
-        const glowPoints = new THREE.Points(glowGeo, glowMat);
-        scene.add(glowPoints);
-        scene.add(historyLine);
-        scene.add(futureLine);
+        const glowpoints = new three.points(glowgeo, glowmat);
+        scene.add(glowpoints);
+        scene.add(historyline);
+        scene.add(futureline);
 
-        // --- Markers ---
-        const markersContainer = document.getElementById('markers-container');
-        const markerElements = [];
+        // --- markers ---
+        const markerscontainer = document.getelementbyid('markers-container');
+        const markerelements = [];
 
-        MILESTONES.forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'marker';
-            div.innerHTML = `
+        milestones.foreach(m => {
+            const div = document.createelement('div');
+            div.classname = 'marker';
+            div.innerhtml = `
                 <div class="marker-content">
                     <div class="marker-year">${m.year}</div>
                     <div class="marker-label">${m.name}</div>
                     <div class="marker-author">${m.authors}</div>
                 </div>
             `;
-            markersContainer.appendChild(div);
-            markerElements.push({ data: m, element: div });
+            markerscontainer.appendchild(div);
+            markerelements.push({ data: m, element: div });
         });
 
-        // --- Logic & Animation ---
-        const noiseScale = 0.15; 
-        const heightScale = 4.0; 
-        const positionAttribute = geometry.attributes.position;
-        const colorAttribute = geometry.attributes.color;
-        const originalPositions = positionAttribute.array.slice();
+        // --- logic & animation ---
+        const noisescale = 0.15; 
+        const heightscale = 4.0; 
+        const positionattribute = geometry.attributes.position;
+        const colorattribute = geometry.attributes.color;
+        const originalpositions = positionattribute.array.slice();
 
-        const colorWater = new THREE.Color(0x3498db); 
-        const colorSand = new THREE.Color(0xf1c40f);  
-        const colorGrass = new THREE.Color(0x2ecc71); 
-        const colorRock = new THREE.Color(0xe74c3c);
+        const colorwater = new three.color(0x3498db); 
+        const colorsand = new three.color(0xf1c40f);  
+        const colorgrass = new three.color(0x2ecc71); 
+        const colorrock = new three.color(0xe74c3c);
         
-        const colorTimelineOrange = new THREE.Color(0xff4500); 
-        const colorTimelineGray = new THREE.Color(0x888888);
+        const colortimelineorange = new three.color(0xff4500); 
+        const colortimelinegray = new three.color(0x888888);
 
-        let flyOverY = 0;
-        let targetFlyOverY = 0;
-        const heroTitle = document.getElementById('hero-title');
+        let flyovery = 0;
+        let targetflyovery = 0;
+        const herotitle = document.getelementbyid('hero-title');
 
-        // Sky Cycle Colors (Updated for brighter start)
-        const skyColors = [
-            { pos: 0, color: new THREE.Color(0xf0f4f8), dramatic: 1.0 },    // Morning (Bright, dramatic)
-            { pos: 150, color: new THREE.Color(0x8a929a), dramatic: 0.8 },  // Noon
-            { pos: 300, color: new THREE.Color(0x5a626a), dramatic: 0.3 },  // Dusk
-            { pos: 450, color: new THREE.Color(0x2a323a), dramatic: 0.1 },  // Night (Calm)
-            { pos: 550, color: new THREE.Color(0x5a626a), dramatic: 0.3 },  // Dawn
-            { pos: 700, color: new THREE.Color(0xf0f4f8), dramatic: 1.0 }   // Day (Bright, dramatic)
+        // sky cycle colors (updated for brighter start)
+        const skycolors = [
+            { pos: 0, color: new three.color(0xf0f4f8), dramatic: 1.0 },    // morning (bright, dramatic)
+            { pos: 150, color: new three.color(0x8a929a), dramatic: 0.8 },  // noon
+            { pos: 300, color: new three.color(0x5a626a), dramatic: 0.3 },  // dusk
+            { pos: 450, color: new three.color(0x2a323a), dramatic: 0.1 },  // night (calm)
+            { pos: 550, color: new three.color(0x5a626a), dramatic: 0.3 },  // dawn
+            { pos: 700, color: new three.color(0xf0f4f8), dramatic: 1.0 }   // day (bright, dramatic)
         ];
 
-        function getSkyState(y) {
+        function getskystate(y) {
             const cycle = 700; 
-            const modY = y % cycle;
-            for(let i=0; i<skyColors.length-1; i++) {
-                const curr = skyColors[i];
-                const next = skyColors[i+1];
-                if (modY >= curr.pos && modY < next.pos) {
-                    const t = (modY - curr.pos) / (next.pos - curr.pos);
+            const mody = y % cycle;
+            for(let i=0; i<skycolors.length-1; i++) {
+                const curr = skycolors[i];
+                const next = skycolors[i+1];
+                if (mody >= curr.pos && mody < next.pos) {
+                    const t = (mody - curr.pos) / (next.pos - curr.pos);
                     return {
                         color: curr.color.clone().lerp(next.color, t),
                         dramatic: lerp(t, curr.dramatic, next.dramatic)
                     };
                 }
             }
-            return { color: skyColors[0].color, dramatic: skyColors[0].dramatic };
+            return { color: skycolors[0].color, dramatic: skycolors[0].dramatic };
         }
         
         function lerp(t, a, b) { return a + t * (b - a); }
 
-        function getPathX(z) {
-            return Math.sin(z * 0.1) * 8 + Math.cos(z * 0.03) * 12;
+        function getpathx(z) {
+            return math.sin(z * 0.1) * 8 + math.cos(z * 0.03) * 12;
         }
 
-        function getColorForHeight(h) {
-            let finalColor = new THREE.Color();
-            if (h < -0.2) finalColor.copy(colorWater);
-            else if (h < 0.1) finalColor.lerpColors(colorWater, colorSand, (h + 0.2) / 0.3);
-            else if (h < 0.6) finalColor.lerpColors(colorSand, colorGrass, (h - 0.1) / 0.5);
-            else finalColor.lerpColors(colorGrass, colorRock, Math.min((h - 0.6) / 0.9, 1));
-            return finalColor;
+        function getcolorforheight(h) {
+            let finalcolor = new three.color();
+            if (h < -0.2) finalcolor.copy(colorwater);
+            else if (h < 0.1) finalcolor.lerpcolors(colorwater, colorsand, (h + 0.2) / 0.3);
+            else if (h < 0.6) finalcolor.lerpcolors(colorsand, colorgrass, (h - 0.1) / 0.5);
+            else finalcolor.lerpcolors(colorgrass, colorrock, math.min((h - 0.6) / 0.9, 1));
+            return finalcolor;
         }
 
-        function updateScene() {
-            flyOverY += (targetFlyOverY - flyOverY) * 0.08;
+        function updatescene() {
+            flyovery += (targetflyovery - flyovery) * 0.08;
 
-            const skyState = getSkyState(flyOverY);
+            const skystate = getskystate(flyovery);
             
-            // Sync Fog, Sky Mesh
-            scene.fog.color.copy(skyState.color);
-            skyMesh.material.uniforms.uColor.value.copy(skyState.color);
-            skyMesh.material.uniforms.uCloudDramatic.value = skyState.dramatic;
-            // Slower time for cloud movement
-            skyMesh.material.uniforms.uTime.value += 0.01; 
+            // sync fog, sky mesh
+            scene.fog.color.copy(skystate.color);
+            skymesh.material.uniforms.ucolor.value.copy(skystate.color);
+            skymesh.material.uniforms.uclouddramatic.value = skystate.dramatic;
+            // slower time for cloud movement
+            skymesh.material.uniforms.utime.value += 0.01; 
             
-            // Sync solid terrain color so the ground darkens with the sky cycle
-            terrainSolid.material.color.copy(skyState.color);
+            // sync solid terrain color so the ground darkens with the sky cycle
+            terrainsolid.material.color.copy(skystate.color);
 
             for (let i = 0; i < count; i++) {
                 const ix = i * 3;
                 const iz = i * 3 + 2;
-                const x = originalPositions[ix];
-                const z = originalPositions[iz];
-                const vZ = z - flyOverY;
-                const noiseVal = Noise.perlin2(x * noiseScale, vZ * noiseScale);
-                let height = noiseVal * heightScale;
+                const x = originalpositions[ix];
+                const z = originalpositions[iz];
+                const vz = z - flyovery;
+                const noiseval = noise.perlin2(x * noisescale, vz * noisescale);
+                let height = noiseval * heightscale;
                 if (height < -1) height = -1;
-                positionAttribute.setY(i, height);
-                const c = getColorForHeight(noiseVal);
-                c.multiplyScalar(0.9);
-                colorAttribute.setXYZ(i, c.r, c.g, c.b);
+                positionattribute.sety(i, height);
+                const c = getcolorforheight(noiseval);
+                c.multiplyscalar(0.9);
+                colorattribute.setxyz(i, c.r, c.g, c.b);
             }
-            positionAttribute.needsUpdate = true;
-            colorAttribute.needsUpdate = true;
+            positionattribute.needsupdate = true;
+            colorattribute.needsupdate = true;
 
-            const lineStartZ = 10;
-            const lineEndZ = -70; 
-            const step = (lineStartZ - lineEndZ) / linePoints;
-            const histPos = historyLine.geometry.attributes.position;
-            const histCol = historyLine.geometry.attributes.color;
-            const futPos = futureLine.geometry.attributes.position;
-            const glowPos = glowPoints.geometry.attributes.position;
-            const presentZ = MILESTONES[MILESTONES.length - 1].z; 
+            const linestartz = 10;
+            const lineendz = -70; 
+            const step = (linestartz - lineendz) / linepoints;
+            const histpos = historyline.geometry.attributes.position;
+            const histcol = historyline.geometry.attributes.color;
+            const futpos = futureline.geometry.attributes.position;
+            const glowpos = glowpoints.geometry.attributes.position;
+            const presentz = milestones[milestones.length - 1].z; 
 
-            for (let i = 0; i < linePoints; i++) {
-                const worldZ = lineStartZ - (i * step);
-                const virtualZ = worldZ - flyOverY;
-                const pX = getPathX(virtualZ);
-                const noiseVal = Noise.perlin2(pX * noiseScale, virtualZ * noiseScale);
-                const pY = Math.max(noiseVal * heightScale, -1) + 0.5;
-                glowPos.setXYZ(i, pX, pY, worldZ);
+            for (let i = 0; i < linepoints; i++) {
+                const worldz = linestartz - (i * step);
+                const virtualz = worldz - flyovery;
+                const px = getpathx(virtualz);
+                const noiseval = noise.perlin2(px * noisescale, virtualz * noisescale);
+                const py = math.max(noiseval * heightscale, -1) + 0.5;
+                glowpos.setxyz(i, px, py, worldz);
 
-                if (virtualZ > presentZ) {
-                    histPos.setXYZ(i, pX, pY, worldZ);
-                    futPos.setXYZ(i, 0, 0, 99999); 
-                    if (worldZ > 4) { 
-                        histCol.setXYZ(i, colorTimelineGray.r, colorTimelineGray.g, colorTimelineGray.b);
+                if (virtualz > presentz) {
+                    histpos.setxyz(i, px, py, worldz);
+                    futpos.setxyz(i, 0, 0, 99999); 
+                    if (worldz > 4) { 
+                        histcol.setxyz(i, colortimelinegray.r, colortimelinegray.g, colortimelinegray.b);
                     } else {
-                        histCol.setXYZ(i, colorTimelineOrange.r, colorTimelineOrange.g, colorTimelineOrange.b);
+                        histcol.setxyz(i, colortimelineorange.r, colortimelineorange.g, colortimelineorange.b);
                     }
                 } else {
-                    histPos.setXYZ(i, 0, 0, 99999); 
-                    futPos.setXYZ(i, pX, pY, worldZ);
+                    histpos.setxyz(i, 0, 0, 99999); 
+                    futpos.setxyz(i, px, py, worldz);
                 }
             }
-            histPos.needsUpdate = true;
-            histCol.needsUpdate = true;
-            futPos.needsUpdate = true;
-            glowPos.needsUpdate = true;
-            futureLine.computeLineDistances();
+            histpos.needsupdate = true;
+            histcol.needsupdate = true;
+            futpos.needsupdate = true;
+            glowpos.needsupdate = true;
+            futureline.computelinedistances();
 
-            const tempV = new THREE.Vector3();
-            markerElements.forEach(item => {
+            const tempv = new three.vector3();
+            markerelements.foreach(item => {
                 const m = item.data;
                 const el = item.element;
-                const wZ = m.z + flyOverY;
-                const vZ = m.z;
+                const wz = m.z + flyovery;
+                const vz = m.z;
                 
-                if (wZ > -60 && wZ < 20) {
-                    const wX = getPathX(vZ);
-                    const noiseVal = Noise.perlin2(wX * noiseScale, vZ * noiseScale);
-                    const wY = Math.max(noiseVal * heightScale, -1) + 2.5;
-                    tempV.set(wX, wY, wZ);
-                    tempV.project(camera);
-                    const x = (tempV.x * .5 + .5) * window.innerWidth;
-                    const y = (-(tempV.y * .5) + .5) * window.innerHeight;
+                if (wz > -60 && wz < 20) {
+                    const wx = getpathx(vz);
+                    const noiseval = noise.perlin2(wx * noisescale, vz * noisescale);
+                    const wy = math.max(noiseval * heightscale, -1) + 2.5;
+                    tempv.set(wx, wy, wz);
+                    tempv.project(camera);
+                    const x = (tempv.x * .5 + .5) * window.innerwidth;
+                    const y = (-(tempv.y * .5) + .5) * window.innerheight;
 
-                    if (wZ > 5) el.classList.add('past');
-                    else el.classList.remove('past');
+                    if (wz > 5) el.classlist.add('past');
+                    else el.classlist.remove('past');
 
-                    const dist = Math.abs(wZ);
+                    const dist = math.abs(wz);
                     let opacity = 1;
-                    if (wZ > 12) opacity = 0; 
-                    else if (wZ < -40) opacity = Math.max(0, 1 - (Math.abs(wZ) - 40) / 10);
+                    if (wz > 12) opacity = 0; 
+                    else if (wz < -40) opacity = math.max(0, 1 - (math.abs(wz) - 40) / 10);
                     el.style.opacity = opacity;
                     el.style.left = `${x}px`;
                     el.style.top = `${y}px`;
@@ -1044,130 +1000,128 @@
         }
 
         function animate() {
-            requestAnimationFrame(animate);
-            updateScene();
+            requestanimationframe(animate);
+            updatescene();
             renderer.render(scene, camera);
         }
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        window.addeventlistener('resize', () => {
+            camera.aspect = window.innerwidth / window.innerheight;
+            camera.updateprojectionmatrix();
+            renderer.setsize(window.innerwidth, window.innerheight);
         });
 
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            targetFlyOverY = scrollY * 0.25; 
+        window.addeventlistener('scroll', () => {
+            const scrolly = window.scrolly;
+            targetflyovery = scrolly * 0.25; 
             
-            const startFade = 100;
-            const endFade = 600;
+            const startfade = 100;
+            const endfade = 600;
             let opacity = 1;
-            if (scrollY > startFade) {
-                opacity = 1 - (scrollY - startFade) / (endFade - startFade);
+            if (scrolly > startfade) {
+                opacity = 1 - (scrolly - startfade) / (endfade - startfade);
                 if (opacity < 0) opacity = 0;
             }
-            heroTitle.style.opacity = opacity;
+            herotitle.style.opacity = opacity;
             if (opacity > 0) {
-                const lift = Math.min(scrollY * 0.2, 100);
-                heroTitle.style.transform = `translate(-50%, calc(-50% - ${lift}px))`;
+                const lift = math.min(scrolly * 0.2, 100);
+                herotitle.style.transform = `translate(-50%, calc(-50% - ${lift}px))`;
             }
 
-            // Show card logic
-            const processCard = document.getElementById('process-card');
-            const submissionCard = document.getElementById('submission-card');
-            const newsCard = document.getElementById('news-card');
+            // show card logic
+            const processcard = document.getelementbyid('process-card');
+            const submissioncard = document.getelementbyid('submission-card');
+            const newscard = document.getelementbyid('news-card');
             
-            // Process: Show 50px - 1000px
-            // Logic to Highlight Rows based on scroll progress within this window
-            if (scrollY > 50 && scrollY < 1000) { 
-                processCard.classList.add('visible');
+            // process: show 50px - 700px
+            if (scrolly > 50 && scrolly < 700) { 
+                processcard.classlist.add('visible');
                 
-                // Highlight Logic
+                // highlight logic
                 const start = 50;
-                const end = 1000;
+                const end = 700; 
                 const range = end - start;
-                const progress = (scrollY - start) / range; // 0.0 to 1.0
+                const progress = (scrolly - start) / range; 
                 
-                // 5 Items, map progress to 0-4 index
-                const items = processCard.querySelectorAll('.feed-item');
-                const activeIndex = Math.floor(progress * items.length);
+                const items = processcard.queryselectorall('.feed-item');
+                const activeindex = math.floor(progress * items.length);
                 
-                items.forEach((item, index) => {
-                    if (index === activeIndex) {
-                        item.classList.add('active-step');
+                items.foreach((item, index) => {
+                    if (index === activeindex) {
+                        item.classlist.add('active-step');
                     } else {
-                        item.classList.remove('active-step');
+                        item.classlist.remove('active-step');
                     }
                 });
 
             } else {
-                processCard.classList.remove('visible');
+                processcard.classlist.remove('visible');
             }
 
-            // Submissions: Show 1000px - 2200px
-            if (scrollY >= 1000 && scrollY < 2200) { 
-                submissionCard.classList.add('visible');
+            // news: show 700px - 1500px (immediate after process, shortened duration)
+            if (scrolly >= 700 && scrolly < 1500) {
+                newscard.classlist.add('visible');
             } else {
-                submissionCard.classList.remove('visible');
+                newscard.classlist.remove('visible');
             }
-
-            // News: Show 2200px - 3800px (Slides in, then slides away)
-            if (scrollY >= 2200 && scrollY < 3800) {
-                newsCard.classList.add('visible');
+            
+            // submissions: show 1500px - 3500px (immediate after news)
+            if (scrolly >= 1500 && scrolly < 3500) {
+                submissioncard.classlist.add('visible');
             } else {
-                newsCard.classList.remove('visible');
+                submissioncard.classlist.remove('visible');
             }
         });
 
         animate();
 
-        // --- Feed Logic ---
-        const cardList = document.getElementById('submission-list');
-        const newsList = document.getElementById('news-list');
+        // --- feed logic ---
+        const cardlist = document.getelementbyid('submission-list');
+        const newslist = document.getelementbyid('news-list');
         
-        let lastSubmissionData = null;
+        let lastsubmissiondata = null;
 
-        function addSubmissionRow(user, mod) {
-            const li = document.createElement('li');
-            li.className = 'feed-item';
-            li.innerHTML = `
+        function addsubmissionrow(user, mod) {
+            const li = document.createelement('li');
+            li.classname = 'feed-item';
+            li.innerhtml = `
                 <span class="sub-user">${user}</span>
                 <span class="sub-module">${mod}</span>
             `;
-            cardList.appendChild(li);
+            cardlist.appendchild(li);
         }
 
-        // --- News Logic (Tiny Torch Specific) ---
-        const NEWS_ITEMS = [
-            { date: "Dec 15", title: "New Module: Diffusion Models", link: "#" },
-            { date: "Nov 30", title: "Tiny Torch Community Meetup", link: "#" },
-            { date: "Nov 20", title: "Edge AI Foundation Course Live", link: "#" },
-            { date: "Nov 10", title: "Guest Lecture: Andrej Karpathy", link: "#" }
+        // --- news logic (tiny torch specific) ---
+        const news_items = [
+            { date: "dec 15", title: "new module: diffusion models", link: "#" },
+            { date: "nov 30", title: "tiny torch community meetup", link: "#" },
+            { date: "nov 20", title: "edge ai foundation course live", link: "#" },
+            { date: "nov 10", title: "guest lecture: andrej karpathy", link: "#" }
         ];
 
-        function populateNews() {
-            newsList.innerHTML = '';
-            NEWS_ITEMS.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'feed-item';
-                li.innerHTML = `
+        function populatenews() {
+            newslist.innerhtml = '';
+            news_items.foreach(item => {
+                const li = document.createelement('li');
+                li.classname = 'feed-item';
+                li.innerhtml = `
                     <a href="${item.link}" target="_blank" class="news-link">
                         <span class="news-date">${item.date}</span>
                         <span class="news-title">${item.title}</span>
                     </a>
                 `;
-                newsList.appendChild(li);
+                newslist.appendchild(li);
             });
         }
         
-        populateNews();
+        populatenews();
 
-        // --- Real Data Integration ---
+        // --- real data integration ---
         
-        const API_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/get_recent_submitted";
+        const api_url = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/get_recent_submitted";
         
-        // Map DB IDs to UI Strings
-        const MODULE_MAP = {
+        // map db ids to ui strings
+        const module_map = {
             "01": "01_tensor",
             "02": "02_activations",
             "03": "03_layers",
@@ -1191,54 +1145,54 @@
             "21": "21_mlops"
         };
 
-        async function fetchRealSubmissions() {
+        async function fetchrealsubmissions() {
             try {
-                // Fetch top 5 recent submissions
-                const response = await fetch(`${API_URL}?limit=5`);
+                // fetch top 5 recent submissions
+                const response = await fetch(`${api_url}?limit=5`);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new error(`http error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                processRealData(data);
+                processrealdata(data);
 
             } catch (error) {
-                console.error("Error fetching submissions:", error);
+                console.error("error fetching submissions:", error);
             }
         }
 
-        function processRealData(data) {
-            // Check if data changed to avoid redraws
-            const currentHash = JSON.stringify(data);
-            if (currentHash === lastSubmissionData) return;
+        function processrealdata(data) {
+            // check if data changed to avoid redraws
+            const currenthash = json.stringify(data);
+            if (currenthash === lastsubmissiondata) return;
             
-            lastSubmissionData = currentHash;
+            lastsubmissiondata = currenthash;
             
-            // Clear the existing list
-            cardList.innerHTML = '';
+            // clear the existing list
+            cardlist.innerhtml = '';
 
-            data.forEach(row => {
-                const username = row.username || "Anonymous";
+            data.foreach(row => {
+                const username = row.username || "anonymous";
                 
-                // Get the last completed module ID (most recent)
-                const lastId = row.completed_ids && row.completed_ids.length > 0 
+                // get the last completed module id (most recent)
+                const lastid = row.completed_ids && row.completed_ids.length > 0 
                     ? row.completed_ids[row.completed_ids.length - 1] 
                     : 1;
                 
-                // Format ID to match map keys (e.g. 1 -> "01")
-                const idKey = String(lastId).padStart(2, '0');
+                // format id to match map keys (e.g. 1 -> "01")
+                const idkey = string(lastid).padstart(2, '0');
                 
-                // Lookup or fallback
-                const modName = MODULE_MAP[idKey] || `Module ${lastId}`;
+                // lookup or fallback
+                const modname = module_map[idkey] || `module ${lastid}`;
 
-                addSubmissionRow(username, modName);
+                addsubmissionrow(username, modname);
             });
         }
 
-        // Start Polling
-        fetchRealSubmissions(); // Initial fetch
-        setInterval(fetchRealSubmissions, 10000); // Poll every 10 seconds
+        // start polling
+        fetchrealsubmissions(); // initial fetch
+        setinterval(fetchrealsubmissions, 10000); // poll every 10 seconds
 
     </script>
 </body>
