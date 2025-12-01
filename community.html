@@ -1,0 +1,56 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
+  <!--<script src="../../dist/globe.gl.js"></script>-->
+</head>
+
+<body>
+  <div id="globeViz"></div>
+
+  <script type="module">
+    import { csvParse } from 'https://esm.sh/d3-dsv';
+    import { scaleSequentialSqrt } from 'https://esm.sh/d3-scale';
+    import { interpolateYlOrRd } from 'https://esm.sh/d3-scale-chromatic';
+
+    const weightColor = scaleSequentialSqrt(interpolateYlOrRd)
+      .domain([0, 1e7]);
+
+    const world = new Globe(document.getElementById('globeViz'));
+
+    // Determine time of day for dynamic styling
+    const hour = new Date().getHours();
+    let globeImage, backgroundImage;
+
+    if (hour >= 6 && hour < 18) { // Day (6 AM to 6 PM)
+      // Use Blue Marble for day. Sky is usually black in space, but we can leave it null or set a color.
+      globeImage = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+      backgroundImage = null; // Or a star field if preferred, but "day-sky" doesn't exist.
+      world.backgroundColor('#000011'); // Deep space blue/black
+    } else { // Night (6 PM to 6 AM)
+      globeImage = 'https://unpkg.com/three-globe/example/img/earth-night.jpg';
+      backgroundImage = 'https://unpkg.com/three-globe/example/img/night-sky.png';
+    }
+
+    world
+      .globeImageUrl(globeImage)
+      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl(backgroundImage)
+      .hexBinPointWeight('pop')
+      .hexAltitude(d => d.sumWeight * 6e-8)
+      .hexBinResolution(4)
+      .hexTopColor(d => weightColor(d.sumWeight))
+      .hexSideColor(d => weightColor(d.sumWeight))
+      .hexBinMerge(true)
+      .enablePointerInteraction(false); // performance improvement
+
+    // Fix: Path should be ./datasets/ not ../datasets/
+    fetch('./datasets/world_population.csv').then(res => res.text())
+      .then(csv => csvParse(csv, ({ lat, lng, pop }) => ({ lat: +lat, lng: +lng, pop: +pop })))
+      .then(data => world.hexBinPointsData(data));
+
+    // Add auto-rotation
+    world.controls().autoRotate = true;
+    world.controls().autoRotateSpeed = 0.6;
+  </script>
+</body>

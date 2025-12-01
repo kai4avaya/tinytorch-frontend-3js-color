@@ -228,7 +228,7 @@
             <a href="#" class="nav-item">Home</a>
             <a href="#" class="nav-item">About</a>
             <a href="#" class="nav-item">Events</a>
-            <a href="#" class="nav-item">Community</a>
+            <a href="community.html" class="nav-item">Community</a>
             <a href="#" class="nav-item">Contact</a>
         </nav>
     `;
