@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        // CLIENT-SIDE SECURITY CHECK:
+        // This script prevents unauthorized visual access to the dashboard content.
+        // It does NOT prevent direct download of this HTML file by a determined user.
+        // For true data security, ensure all sensitive data is fetched via authenticated API calls.
+        const token = localStorage.getItem("tinytorch_token");
+        if (!token) {
+            window.location.href = '/index.html'; 
+        }
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Tiny Torch Journey</title>
