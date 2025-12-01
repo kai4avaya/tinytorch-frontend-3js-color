@@ -1,0 +1,118 @@
+To fetch the user's progress, you will use the GET /api/submissions?mine=true endpoint. Since the API returns raw submission data, you will need to process this data in your JavaScript to determine which
+  modules have been "passed" (completed successfully).
+
+  Here is the JavaScript code to map your modules, fetch the data, and calculate progress.
+
+  The JavaScript Implementation
+
+  You can add this to your existing script. It includes the module mapping you provided.
+
+     1 // 1. Define your Module Map (Based on your file structure)
+     2 const MODULE_MAP = {
+     3   "01": { id: "01", title: "Tensor Basics", dir: "01_tensor" },
+     4   "02": { id: "02", title: "Activations (ReLU, Softmax)", dir: "02_activations" },
+     5   "03": { id: "03", title: "Linear Layers", dir: "03_layers" },
+     6   "04": { id: "04", title: "Loss Functions", dir: "04_losses" },
+     7   "05": { id: "05", title: "Automatic Differentiation", dir: "05_autograd" },
+     8   "06": { id: "06", title: "Optimizers (SGD, Adam)", dir: "06_optimizers" },
+     9   "07": { id: "07", title: "Training Loops", dir: "07_training" },
+    10   "08": { id: "08", title: "Data Pipelines", dir: "08_dataloader" },
+    11   "09": { id: "09", title: "Conv2d & CNNs", dir: "09_spatial" },
+    12   "10": { id: "10", title: "Text Processing", dir: "10_tokenization" },
+    13   "11": { id: "11", title: "Embeddings", dir: "11_embeddings" },
+    14   "12": { id: "12", title: "Multi-head Attention", dir: "12_attention" },
+    15   "13": { id: "13", title: "Transformer Blocks", dir: "13_transformers" },
+    16   "14": { id: "14", title: "Profiling", dir: "14_profiling" },
+    17   "15": { id: "15", title: "Quantization", dir: "15_quantization" },
+    18   "16": { id: "16", title: "Compression", dir: "16_compression" },
+    19   "17": { id: "17", title: "Memoization", dir: "17_memoization" },
+    20   "18": { id: "18", title: "Hardware Optimization", dir: "18_acceleration" },
+    21   "19": { id: "19", title: "Benchmarking", dir: "19_benchmarking" },
+    22   "20": { id: "20", title: "Capstone Project", dir: "20_capstone" }
+    23 };
+    24 
+    25 /**
+    26  * Fetch User Progress
+    27  * Gets all submissions, filters for success, and maps to modules.
+    28  */
+    29 async function fetchUserProgress() {
+    30   const token = localStorage.getItem("tinytorch_token");
+    31   if (!token) { 
+    32       console.error("Not logged in");
+    33       return null;
+    34   }
+    35 
+    36   try {
+    37     // Fetch 'mine=true' to get only the authenticated user's submissions
+    38     // We ask for a high limit (1000) to ensure we get history
+    39     const response = await fetch(`${API_BASE_URL}/api/submissions?mine=true&limit=1000`, {
+    40       method: "GET",
+    41       headers: {
+    42         "Content-Type": "application/json",
+    43         "Authorization": `Bearer ${token}`
+    44       }
+    45     });
+    46 
+    47     if (!response.ok) throw new Error("Failed to fetch submissions");
+    48     
+    49     const { data: submissions } = await response.json();
+    50 
+    51     // 2. Process the Submissions to find "Passed" modules
+    52     const passedModules = new Set();
+    53     const detailedProgress = {};
+    54 
+    55     submissions.forEach(sub => {
+    56         // Normalize status to check for success
+    57         const status = (sub.status || "").toLowerCase();
+    58         const isSuccess = status === "success" || status === "accepted";
+    59 
+    60         // Assuming 'problem_id' in DB matches the keys (e.g., "01" or "01_tensor")
+    61         // You might need to extract the number: "01_tensor" -> "01"
+    62         let moduleId = sub.problem_id; 
+    63         
+    64         // Handle case where problem_id is "01_tensor" but map key is "01"
+    65         if (!MODULE_MAP[moduleId] && moduleId.includes('_')) {
+    66             moduleId = moduleId.split('_')[0];
+    67         }
+    68 
+    69         if (MODULE_MAP[moduleId] && isSuccess) {
+    70             passedModules.add(moduleId);
+    71             
+    72             // Optional: Keep track of best metrics for this module
+    73             if (!detailedProgress[moduleId]) {
+    74                 detailedProgress[moduleId] = { 
+    75                     ...MODULE_MAP[moduleId], 
+    76                     submitted_at: sub.created_at,
+    77                     metrics: sub.metrics 
+    78                 };
+    79             }
+    80         }
+    81     });
+    82 
+    83     // 3. Return useful data structure
+    84     return {
+    85         total_modules: Object.keys(MODULE_MAP).length,
+    86         passed_count: passedModules.size,
+    87         passed_ids: Array.from(passedModules).sort(),
+    88         details: detailedProgress
+    89     };
+    90 
+    91   } catch (error) {
+    92     console.error("Error fetching progress:", error);
+    93     return null;
+    94   }
+    95 }
+    96 
+    97 // Example Usage:
+    98 // fetchUserProgress().then(stats => {
+    99 //     console.log(`You have completed ${stats.passed_count} / ${stats.total_modules} modules.`);
+   100 //     console.log("Completed Modules:", stats.passed_ids);
+   101 // });
+
+  How it Works
+
+   1. API Call: It calls GET /api/submissions?mine=true. Since you are sending the Authorization header, the API returns the raw list of every submission this user has ever made.
+   2. Client-Side Filtering: It loops through the submissions and checks if status is "success" or "accepted".
+   3. ID Matching: It extracts the ID (e.g., "01") from the problem_id field. It handles cases where the ID might be "01_tensor" by splitting the string.
+   4. Deduplication: It uses a Set to ensure that if a user submits Module 01 five times, it only counts as passed once.
+

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Tiny Torch Journey</title>
+    <link rel="icon" href="assets/flame.ico" type="image/x-icon">
     <style>
         body {
             margin: 0;
@@ -26,7 +27,7 @@
 
         #ui-layer {
             position: fixed; /* Fixed so it stays visible on scroll */
-            top: 40px;
+            top: 80px;
             left: 40px;
             z-index: 2;
             pointer-events: none;
@@ -334,6 +335,11 @@
     <canvas id="canvas"></canvas>
 
     <script>
+        window.USER_EMAIL = "kaik@harvard.edu";
+    </script>
+    <script src="layout.js"></script>
+
+    <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const labelsContainer = document.getElementById('labels-container');
@@ -578,9 +584,9 @@
             if (isMobile) {
                 // Vertical Spiral Mode
                 width = canvas.width = window.innerWidth;
-                // Make height tall enough for 20 items spiral
+                // Make height tall enough for 20 items spiral, plus extra bottom padding
                 const itemSpacing = 120;
-                height = canvas.height = Math.max(window.innerHeight, (milestones.length * itemSpacing) + 200);
+                height = canvas.height = Math.max(window.innerHeight, (milestones.length * itemSpacing) + 200 + 100);
                 document.body.style.overflowY = 'auto'; // Enable scroll
             } else {
                 // Horizontal Landscape Mode
