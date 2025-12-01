@@ -1,56 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <style> body { margin: 0; } </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D3 Pen Outline Globe</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      
+      /* Base Paper Color */
+      background-color: #f0f4f8;
+      
+      /* Graph Paper Grid Logic */
+      background-image: 
+        linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        
+      background-size: 20px 20px;
+    }
 
-  <script src="//cdn.jsdelivr.net/npm/globe.gl"></script>
-  <!--<script src="../../dist/globe.gl.js"></script>-->
+    svg {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab; /* Indicate draggable */
+    }
+
+    svg:active {
+      cursor: grabbing;
+    }
+    
+    .label-box {
+      position: absolute;
+      top: 20px;
+      /* Shifted right as requested */
+      left: 80px; 
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #333;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+      z-index: 10;
+      pointer-events: auto; 
+      min-width: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .label-header {
+      border-bottom: 1px dashed #ccc;
+      padding-bottom: 8px;
+    }
+
+    /* Search Input Styling */
+    .search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #ff6600;
+      background: #fffcf5;
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 20;
+      display: none;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .search-item {
+      padding: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .search-item:hover {
+      background-color: #ffe0b2;
+    }
+
+    /* Key / Legend Styling */
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #555;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #ff6600;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid #ffcc00;
+      box-shadow: 0 0 2px rgba(255, 102, 0, 0.6);
+    }
+
+    /* Toggle Button Styling */
+    .control-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      border: 1px solid #555;
+      padding: 4px 8px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      outline: none;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .control-btn:hover {
+      background: #eee;
+      box-shadow: 1px 1px 0px #333;
+      transform: translate(-1px, -1px);
+    }
+    
+    .control-btn:active {
+      transform: translate(0, 0);
+      box-shadow: none;
+    }
+
+    /* Pen Styling for the Globe */
+    .globe-outline-circle {
+      fill: #fff; /* White background for the sphere itself */
+      stroke: #333;
+      stroke-width: 2px;
+      pointer-events: none; /* Ensure globe bg doesn't block markers */
+    }
+
+    .graticule {
+      fill: none;
+      stroke: #ccc; /* Light pencil lines for grid */
+      stroke-width: 0.5px;
+      stroke-dasharray: 2,2; /* Dashed lines for technical feel */
+      pointer-events: none;
+    }
+
+    .country {
+      fill: #fff; /* Paper color fill */
+      stroke: #2c3e50; /* Dark ink stroke */
+      stroke-width: 1.2px;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      pointer-events: none; /* Let events fall through to globe/markers */
+    }
+
+    /* Particle Marker Styling */
+    .marker {
+      stroke: #ffcc00; /* Lighter orange stroke */
+      stroke-width: 1px;
+      fill: #ff6600; /* Bright orange fill */
+      filter: drop-shadow(0 0 4px rgba(255, 102, 0, 0.6)); /* Glow effect */
+      cursor: pointer;
+      transition: r 0.2s ease, fill 0.2s ease;
+      pointer-events: all !important; /* Force events on markers */
+    }
+    
+    .marker:hover {
+        fill: #ff9900;
+        stroke: #fff;
+    }
+
+    /* Tooltip / Mini Modal Styling */
+    .tooltip {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #333;
+      padding: 12px;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+      font-family: 'Arial', sans-serif; /* Clean font for data */
+      font-size: 13px;
+      min-width: 150px;
+      z-index: 100; /* High z-index to be sure */
+    }
+
+    .tooltip h3 {
+      margin: 0 0 5px 0;
+      font-size: 14px;
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .tooltip .info-row {
+      margin: 4px 0;
+      color: #555;
+    }
+
+    .tooltip .highlight {
+      color: #ff6600;
+      font-weight: bold;
+    }
+  </style>
+
+  <!-- Load D3 and TopoJSON -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
 </head>
 
 <body>
-  <div id="globeViz"></div>
+  <div class="label-box">
+    <div class="label-header">
+      <strong>HELLO WORLD!</strong><br>
+      Tiny Torch Community<br>
+      <small style="color:#777; font-size:10px;">Hover over a node to view user</small>
+    </div>
+    
+    <!-- Search UI -->
+    <div class="search-container">
+      <input type="text" id="user-search" class="search-input" placeholder="Search user..." autocomplete="off">
+      <div id="search-dropdown" class="search-results"></div>
+    </div>
 
-  <script type="module">
-    import { csvParse } from 'https://esm.sh/d3-dsv';
-    import { scaleSequentialSqrt } from 'https://esm.sh/d3-scale';
-    import { interpolateYlOrRd } from 'https://esm.sh/d3-scale-chromatic';
+    <button id="rotation-toggle" class="control-btn">
+      <span>&#10074;&#10074;</span> Pause Rotation
+    </button>
 
-    const weightColor = scaleSequentialSqrt(interpolateYlOrRd)
-      .domain([0, 1e7]);
+    <div class="legend-row">
+      <span class="legend-dot"></span>
+      <span>Tiny Torch Community Member</span>
+    </div>
+  </div>
 
-    const world = new Globe(document.getElementById('globeViz'));
+  <!-- Tooltip Container -->
+  <div id="tooltip" class="tooltip"></div>
 
-    // Determine time of day for dynamic styling
-    const hour = new Date().getHours();
-    let globeImage, backgroundImage;
+  <svg></svg>
 
-    if (hour >= 6 && hour < 18) { // Day (6 AM to 6 PM)
-      // Use Blue Marble for day. Sky is usually black in space, but we can leave it null or set a color.
-      globeImage = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
-      backgroundImage = null; // Or a star field if preferred, but "day-sky" doesn't exist.
-      world.backgroundColor('#000011'); // Deep space blue/black
-    } else { // Night (6 PM to 6 AM)
-      globeImage = 'https://unpkg.com/three-globe/example/img/earth-night.jpg';
-      backgroundImage = 'https://unpkg.com/three-globe/example/img/night-sky.png';
+  <script>
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // Configuration
+    const config = {
+      speed: 0.3,
+      verticalTilt: -20,
+      scale: Math.min(width, height) / 2.5
+    };
+
+    const locations = [
+        {"latitude": 22, "longitude": 88, "user": "dev_guru_88", "completed": 85, "institution": "IIT Kharagpur"},
+        {"latitude": 12.61315, "longitude": 38.37723, "user": "ethiopia_code", "completed": 92, "institution": "Addis Ababa Univ"},
+        {"latitude": -30, "longitude": -58, "user": "arg_hacker", "completed": 64, "institution": "Univ of Buenos Aires"},
+        {"latitude": -14.270972, "longitude": -170.132217, "user": "island_coder", "completed": 78, "institution": "Samoa Polytech"},
+        {"latitude": 28.033886, "longitude": 1.659626, "user": "sahara_js", "completed": 45, "institution": "Univ of Algiers"},
+        {"latitude": 40.463667, "longitude": -3.74922, "user": "madrid_frontend", "completed": 99, "institution": "Complutense Univ"},
+        {"latitude": 35.907757, "longitude": 127.766922, "user": "seoul_surfer", "completed": 88, "institution": "KAIST"},
+        {"latitude": 23.634501, "longitude": -102.552784, "user": "mx_fullstack", "completed": 72, "institution": "UNAM"},
+        {"latitude": 42.3736, "longitude": -71.1097, "user": "crimson_dev", "completed": 95, "institution": "Harvard University"}
+    ];
+
+    const svg = d3.select('svg');
+    const tooltip = d3.select('#tooltip');
+    
+    // Projection setup
+    const projection = d3.geoOrthographic()
+      .scale(config.scale)
+      .center([0, 0])
+      .translate([width / 2, height / 2]);
+
+    const path = d3.geoPath().projection(projection);
+    const center = [width/2, height/2];
+
+    // State
+    let currentRotation = [0, config.verticalTilt, 0];
+    let isDragging = false;
+    let isPaused = false;
+    let isHovering = false;
+
+    // Groups
+    const globeGroup = svg.append('g');
+    const graticuleGroup = svg.append('g');
+    const mapGroup = svg.append('g');
+    const markerGroup = svg.append('g');
+
+    // 1. Globe Background
+    globeGroup.append("path")
+      .datum({type: "Sphere"})
+      .attr("class", "globe-outline-circle")
+      .attr("d", path);
+
+    // 2. Graticules
+    const graticule = d3.geoGraticule().step([10, 10]);
+    graticuleGroup.append("path")
+      .datum(graticule)
+      .attr("class", "graticule")
+      .attr("d", path);
+
+    // 3. Load World Data
+    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      .then(worldData => {
+        mapGroup.selectAll(".country")
+          .data(topojson.feature(worldData, worldData.objects.countries).features)
+          .enter().append("path")
+          .attr("class", "country")
+          .attr("d", path);
+        
+        startAnimation();
+      });
+
+    // Drag Behavior
+    const drag = d3.drag()
+      .on("start", () => { isDragging = true; })
+      .on("drag", (event) => {
+        const rotate = projection.rotate();
+        const k = 75 / projection.scale();
+        projection.rotate([ rotate[0] + event.dx * k, rotate[1] - event.dy * k ]);
+        currentRotation = projection.rotate();
+        redraw();
+      })
+      .on("end", () => { isDragging = false; });
+
+    svg.call(drag);
+
+    // Button Logic
+    const toggleBtn = document.getElementById('rotation-toggle');
+    const toggleRotation = () => {
+      isPaused = !isPaused;
+      toggleBtn.innerHTML = isPaused ? 
+        '<span>&#9658;</span> Resume Rotation' : 
+        '<span>&#10074;&#10074;</span> Pause Rotation';
+    };
+    toggleBtn.addEventListener('click', toggleRotation);
+
+    // --- Search Logic ---
+    const searchInput = document.getElementById('user-search');
+    const searchDropdown = document.getElementById('search-dropdown');
+
+    searchInput.addEventListener('input', (e) => {
+      const val = e.target.value.toLowerCase();
+      searchDropdown.innerHTML = '';
+      
+      if (!val) {
+        searchDropdown.style.display = 'none';
+        return;
+      }
+
+      const matches = locations.filter(l => l.user.toLowerCase().includes(val));
+      
+      if (matches.length > 0) {
+        searchDropdown.style.display = 'block';
+        matches.forEach(match => {
+          const div = document.createElement('div');
+          div.className = 'search-item';
+          div.textContent = match.user;
+          div.onclick = () => {
+             searchInput.value = match.user;
+             searchDropdown.style.display = 'none';
+             focusUser(match);
+          };
+          searchDropdown.appendChild(div);
+        });
+      } else {
+        searchDropdown.style.display = 'none';
+      }
+    });
+    
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+             const val = searchInput.value.toLowerCase();
+             // Exact match priority, then fuzzy
+             const match = locations.find(l => l.user.toLowerCase() === val) || 
+                           locations.find(l => l.user.toLowerCase().includes(val));
+             if (match) {
+                 searchDropdown.style.display = 'none';
+                 searchInput.value = match.user; 
+                 focusUser(match);
+             }
+        }
+    });
+
+    // Close dropdown if clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')) {
+            searchDropdown.style.display = 'none';
+        }
+    });
+
+    function focusUser(d) {
+        // Pause rotation so we don't fight the user
+        if (!isPaused) toggleRotation();
+
+        // Target rotation: To center a coordinate [long, lat], we rotate to [-long, -lat]
+        const targetRotation = [-d.longitude, -d.latitude];
+        
+        // Use D3 transition to interpolate the rotation
+        d3.transition()
+          .duration(1500)
+          .tween("rotate", () => {
+             const r = d3.interpolate(projection.rotate(), targetRotation);
+             return (t) => {
+                 projection.rotate(r(t));
+                 currentRotation = projection.rotate(); // Sync state for when we resume
+                 redraw();
+             };
+          });
+    }
+    // ---------------------
+
+    // Animation Loop
+    function startAnimation() {
+      d3.timer(function (elapsed) {
+        if (!isDragging && !isPaused && !isHovering) {
+          currentRotation[0] += config.speed;
+          projection.rotate(currentRotation);
+          redraw();
+        }
+      });
     }
 
-    world
-      .globeImageUrl(globeImage)
-      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-      .backgroundImageUrl(backgroundImage)
-      .hexBinPointWeight('pop')
-      .hexAltitude(d => d.sumWeight * 6e-8)
-      .hexBinResolution(4)
-      .hexTopColor(d => weightColor(d.sumWeight))
-      .hexSideColor(d => weightColor(d.sumWeight))
-      .hexBinMerge(true)
-      .enablePointerInteraction(false); // performance improvement
+    function redraw() {
+        svg.selectAll("path").attr("d", path);
+        updateMarkerPositions();
+    }
 
-    // Fix: Path should be ./datasets/ not ../datasets/
-    fetch('./datasets/world_population.csv').then(res => res.text())
-      .then(csv => csvParse(csv, ({ lat, lng, pop }) => ({ lat: +lat, lng: +lng, pop: +pop })))
-      .then(data => world.hexBinPointsData(data));
+    // Initialize Markers (Run once)
+    function initMarkers() {
+      // Binds data and attaches listeners ONLY ONCE
+      const markers = markerGroup.selectAll('circle.marker')
+        .data(locations)
+        .enter()
+        .append('circle')
+        .attr('class', 'marker')
+        .attr('r', 4)
+        .on("mouseover", function(event, d) {
+            isHovering = true;
+            d3.select(this).transition().duration(200).attr("r", 7);
+            
+            tooltip.html(`
+                <h3>${d.user}</h3>
+                <div class="info-row">Progress: <span class="highlight">${d.completed}%</span></div>
+                <div class="info-row"><i>${d.institution}</i></div>
+            `);
 
-    // Add auto-rotation
-    world.controls().autoRotate = true;
-    world.controls().autoRotateSpeed = 0.6;
+            tooltip
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY - 15) + "px")
+                .style("opacity", 1);
+        })
+        .on("mouseout", function() {
+            isHovering = false;
+            d3.select(this).transition().duration(200).attr("r", 4);
+            tooltip.style("opacity", 0);
+        });
+    }
+
+    // Update positions (Run every frame)
+    function updateMarkerPositions() {
+      // Ensure we have markers
+      const markers = markerGroup.selectAll('circle.marker');
+      
+      // If no markers yet (data loading race condition), init them
+      if (markers.empty()) {
+        initMarkers();
+        return; 
+      }
+
+      markers.each(function(d) {
+        const coordinate = [d.longitude, d.latitude];
+        const gdistance = d3.geoDistance(coordinate, projection.invert(center));
+        const isVisible = gdistance < 1.57; 
+
+        if (isVisible) {
+          const pos = projection(coordinate);
+          d3.select(this)
+            .attr('cx', pos[0])
+            .attr('cy', pos[1])
+            .style('display', 'block');
+        } else {
+          d3.select(this).style('display', 'none');
+        }
+      });
+    }
+
+    // Handle Window Resize
+    window.addEventListener('resize', () => {
+       const w = window.innerWidth;
+       const h = window.innerHeight;
+       svg.attr('width', w).attr('height', h);
+       projection.translate([w/2, h/2]).scale(Math.min(w, h) / 2.5);
+       center[0] = w/2; 
+       center[1] = h/2;
+       redraw();
+    });
+
   </script>
 </body>
+</html>
