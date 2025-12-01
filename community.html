@@ -258,8 +258,9 @@
   <!-- Tooltip Container -->
   <div id="tooltip" class="tooltip"></div>
 
-  <svg></svg>
+  <svg id="globe-svg"></svg>
 
+  <script src="layout.js"></script>
   <script>
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -283,7 +284,7 @@
         {"latitude": 42.3736, "longitude": -71.1097, "user": "crimson_dev", "completed": 95, "institution": "Harvard University"}
     ];
 
-    const svg = d3.select('svg');
+    const svg = d3.select('#globe-svg');
     const tooltip = d3.select('#tooltip');
     
     // Projection setup
