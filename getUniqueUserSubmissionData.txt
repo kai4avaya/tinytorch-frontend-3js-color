@@ -35,6 +35,8 @@ To fetch the user's progress, you will use the GET /api/submissions?mine=true en
     26  * Fetch User Progress
     27  * Gets all submissions, filters for success, and maps to modules.
     28  */
+https://tinytorch.netlify.app/....
+	NOTE our url for this is: 
     29 async function fetchUserProgress() {
     30   const token = localStorage.getItem("tinytorch_token");
     31   if (!token) { 

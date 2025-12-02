@@ -378,7 +378,7 @@
             maxLineWidth: 6,      
             speed: 0.003, 
             padding: 60,       
-            currentStageIndex: 8 // Module 09
+            currentStageIndex: 0 // Initial state, updated by API
         };
 
         // Data: 20 Modules
@@ -928,6 +928,105 @@
             draw();
             animationId = requestAnimationFrame(animateLoop);
         }
+
+        // --- USER PROGRESS INTEGRATION ---
+        const API_BASE_URL = "https://tinytorch.netlify.app";
+        
+        const MODULE_MAP = {
+          "01": { id: "01", title: "Tensor Basics", dir: "01_tensor" },
+          "02": { id: "02", title: "Activations (ReLU, Softmax)", dir: "02_activations" },
+          "03": { id: "03", title: "Linear Layers", dir: "03_layers" },
+          "04": { id: "04", title: "Loss Functions", dir: "04_losses" },
+          "05": { id: "05", title: "Automatic Differentiation", dir: "05_autograd" },
+          "06": { id: "06", title: "Optimizers (SGD, Adam)", dir: "06_optimizers" },
+          "07": { id: "07", title: "Training Loops", dir: "07_training" },
+          "08": { id: "08", title: "Data Pipelines", dir: "08_dataloader" },
+          "09": { id: "09", title: "Conv2d & CNNs", dir: "09_spatial" },
+          "10": { id: "10", title: "Text Processing", dir: "10_tokenization" },
+          "11": { id: "11", title: "Embeddings", dir: "11_embeddings" },
+          "12": { id: "12", title: "Multi-head Attention", dir: "12_attention" },
+          "13": { id: "13", title: "Transformer Blocks", dir: "13_transformers" },
+          "14": { id: "14", title: "Profiling", dir: "14_profiling" },
+          "15": { id: "15", title: "Quantization", dir: "15_quantization" },
+          "16": { id: "16", title: "Compression", dir: "16_compression" },
+          "17": { id: "17", title: "Memoization", dir: "17_memoization" },
+          "18": { id: "18", title: "Hardware Optimization", dir: "18_acceleration" },
+          "19": { id: "19", title: "Benchmarking", dir: "19_benchmarking" },
+          "20": { id: "20", title: "Capstone Project", dir: "20_capstone" }
+        };
+
+        async function fetchUserProgress() {
+          const token = localStorage.getItem("tinytorch_token");
+          if (!token) { 
+              console.error("Not logged in");
+              return null;
+          }
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/submissions?mine=true&limit=1000`, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              }
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch submissions");
+            
+            const { data: submissions } = await response.json();
+
+            const passedModules = new Set();
+            
+            if (submissions && Array.isArray(submissions)) {
+                submissions.forEach(sub => {
+                    const status = (sub.status || "").toLowerCase();
+                    const isSuccess = status === "success" || status === "accepted";
+                    let moduleId = sub.problem_id; 
+                    if (!MODULE_MAP[moduleId] && moduleId.includes('_')) {
+                        moduleId = moduleId.split('_')[0];
+                    }
+                    if (MODULE_MAP[moduleId] && isSuccess) {
+                        passedModules.add(moduleId);
+                    }
+                });
+            }
+
+            return {
+                passed_count: passedModules.size,
+                passed_ids: Array.from(passedModules).sort()
+            };
+
+          } catch (error) {
+            console.error("Error fetching progress:", error);
+            return null;
+          }
+        }
+
+        // Initialize Progress
+        fetchUserProgress().then(stats => {
+            if (stats) {
+                // Update config
+                // Ensure we don't exceed bounds
+                let nextIndex = stats.passed_count;
+                if (nextIndex >= milestones.length) nextIndex = milestones.length - 1;
+                
+                config.currentStageIndex = nextIndex;
+                
+                // Update UI Text
+                const m = milestones[nextIndex];
+                if (m) {
+                     const uiHeader = document.querySelector('#ui-layer p');
+                     if(uiHeader) {
+                         // m.id is "01_tensor" -> "01"
+                         const idNum = m.id.split('_')[0];
+                         uiHeader.textContent = `Current Module: ${idNum} ${m.title}`;
+                     }
+                }
+
+                // Refresh labels to apply 'future' class correctly
+                createLabels();
+            }
+        });
 
         window.addEventListener('resize', resize);
         resize(); // Initial call
