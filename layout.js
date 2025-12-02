@@ -14,10 +14,6 @@
         return { token, email, isLoggedIn: !!token };
     }
 
-    const session = getSession();
-    const isLoggedIn = session.isLoggedIn;
-    const userEmail = session.email;
-
     // 1. Inject CSS
     const style = document.createElement('style');
     style.textContent = `
@@ -256,6 +252,132 @@
             display: none !important;
         }
 
+        /* --- Profile Modal Styles --- */
+        .profile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+
+        .profile-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .profile-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px; /* Slightly wider for profile fields */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .profile-overlay.active .profile-modal {
+            transform: translateY(0);
+        }
+
+        .profile-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .profile-title {
+            font-family: 'Verdana', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .profile-form-group {
+            margin-bottom: 15px;
+        }
+
+        .profile-label {
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Verdana', sans-serif;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .profile-input, .profile-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .profile-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .profile-input:focus, .profile-textarea:focus {
+            border-color: #ff6600;
+        }
+
+        .profile-submit {
+            width: 100%;
+            padding: 12px;
+            background: #ff6600; /* Orange for update action */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+        }
+
+        .profile-submit:hover {
+            background: #e65c00;
+        }
+
+        .profile-logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: #d32f2f; /* Red for logout */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .profile-logout-btn:hover {
+            background: #b71c1c;
+        }
+
         /* --- Mobile Optimizations --- */
         @media (max-width: 768px) {
             /* Sidebar becomes a bottom sheet */
@@ -348,6 +470,23 @@
     const userIcon = `<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>`;
     const logoutIcon = `<path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>`;
 
+    // Initialize button state based on current session
+    function updateAuthButton() {
+        const { isLoggedIn, email: userEmail } = getSession();
+        const currentIcon = isLoggedIn ? logoutIcon : userIcon;
+        const btnText = isLoggedIn ? `Logout of ${userEmail}` : 'Create Account';
+        const btnClass = isLoggedIn ? 'login-btn logged-in' : 'login-btn';
+
+        const authBtnElement = document.getElementById('authBtn');
+        if (authBtnElement) {
+            authBtnElement.className = btnClass;
+            authBtnElement.querySelector('.login-icon').innerHTML = currentIcon;
+            authBtnElement.querySelector('.btn-text').textContent = btnText;
+        }
+    }
+
+    // Define initial state variables for layoutHTML
+    const { isLoggedIn, email: userEmail } = getSession();
     const currentIcon = isLoggedIn ? logoutIcon : userIcon;
     const btnText = isLoggedIn ? `Logout of ${userEmail}` : 'Create Account';
     const btnClass = isLoggedIn ? 'login-btn logged-in' : 'login-btn';
@@ -367,10 +506,11 @@
         </a>
 
         <nav class="sidebar" id="sidebar">
-            <a href="#" class="nav-item">Home</a>
+            <a href="/" class="nav-item">Home</a>
             <a href="about.html" class="nav-item" id="aboutLink">About</a>
             <a href="events.html" class="nav-item">Events</a>
             <a href="community.html" class="nav-item">Community</a>
+            <a href="dashboard.html" class="nav-item">Dashboard</a>
             <a href="contact.html" class="nav-item">Contact</a>
         </nav>
 
@@ -391,9 +531,68 @@
                 <span class="auth-toggle" id="authToggle">Already have an account? Login</span>
             </div>
         </div>
+
+        <!-- Profile Modal (for logged-in users) -->
+        <div class="profile-overlay" id="profileOverlay">
+            <div class="profile-modal">
+                <button class="profile-close" id="profileClose">&times;</button>
+                <h2 class="profile-title">Your Profile</h2>
+                <form id="profileForm">
+                    <div class="profile-form-group">
+                        <label for="profileUsername" class="profile-label">Username:</label>
+                        <input type="text" class="profile-input" id="profileUsername" placeholder="Username">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileDisplayName" class="profile-label">Display Name:</label>
+                        <input type="text" class="profile-input" id="profileDisplayName" placeholder="Display Name">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileAvatarUrl" class="profile-label">Avatar URL:</label>
+                        <input type="text" class="profile-input" id="profileAvatarUrl" placeholder="https://example.com/avatar.jpg">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileFullName" class="profile-label">Full Name:</label>
+                        <input type="text" class="profile-input" id="profileFullName" placeholder="Your Full Name">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileSummary" class="profile-label">Summary:</label>
+                        <textarea class="profile-textarea" id="profileSummary" placeholder="A brief summary about yourself"></textarea>
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileLocation" class="profile-label">Location:</label>
+                        <input type="text" class="profile-input" id="profileLocation" placeholder="City, Country">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileInstitution" class="profile-label">Institution (comma-separated):</label>
+                        <input type="text" class="profile-input" id="profileInstitution" placeholder="University, Company">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileWebsites" class="profile-label">Websites (comma-separated URLs):</label>
+                        <input type="text" class="profile-input" id="profileWebsites" placeholder="https://site1.com, https://site2.com">
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profileContactJson" class="profile-label">Contact Info (JSON):</label>
+                        <textarea class="profile-textarea" id="profileContactJson" placeholder='{"phone": "+123456789", "twitter": "@handle"}'></textarea>
+                    </div>
+                    <div class="profile-form-group">
+                        <label for="profilePreferences" class="profile-label">Preferences (JSON):</label>
+                        <textarea class="profile-textarea" id="profilePreferences" placeholder='{"theme": "dark", "notifications": true}'></textarea>
+                    </div>
+                    <div class="profile-form-group">
+                        <input type="checkbox" id="profileIsPublic">
+                        <label for="profileIsPublic"> Make profile public</label>
+                    </div>
+
+                    <button type="submit" class="profile-submit" id="profileSubmit">Update Profile</button>
+                    <button type="button" class="profile-logout-btn" id="profileLogoutBtn">Logout</button>
+                </form>
+            </div>
+        </div>
     `;
     
     document.body.insertAdjacentHTML('afterbegin', layoutHTML);
+    updateAuthButton(); // Initialize the button state
+
 
     // 3. Add Event Listeners
     const menuBtn = document.getElementById('menuBtn');
@@ -411,6 +610,24 @@
     const forgotLink = document.getElementById('authForgotLink');
     const forgotContainer = document.getElementById('authForgotContainer');
 
+    // Profile Modal Elements
+    const profileOverlay = document.getElementById('profileOverlay');
+    const profileClose = document.getElementById('profileClose');
+    const profileForm = document.getElementById('profileForm');
+    const profileUsernameInput = document.getElementById('profileUsername');
+    const profileDisplayNameInput = document.getElementById('profileDisplayName');
+    const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
+    const profileIsPublicCheckbox = document.getElementById('profileIsPublic');
+    const profileFullNameInput = document.getElementById('profileFullName');
+    const profileSummaryTextarea = document.getElementById('profileSummary');
+    const profileContactJsonTextarea = document.getElementById('profileContactJson');
+    const profileLocationInput = document.getElementById('profileLocation');
+    const profileWebsitesInput = document.getElementById('profileWebsites');
+    const profileInstitutionInput = document.getElementById('profileInstitution');
+    const profilePreferencesTextarea = document.getElementById('profilePreferences');
+    const profileSubmitBtn = document.getElementById('profileSubmit');
+    const profileLogoutBtn = document.getElementById('profileLogoutBtn');
+
     // Modal State
     let currentMode = 'signup'; // 'login', 'signup', 'forgot'
 
@@ -425,16 +642,152 @@
         authOverlay.classList.remove('active');
     }
 
+    function openProfileModal() {
+        profileOverlay.classList.add('active');
+        fetchUserProfile();
+    }
+
+    async function fetchUserProfile() {
+        const { token } = getSession();
+        if (!token) {
+            console.error("No token found for fetching profile.");
+            closeProfileModal();
+            openModal();
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch profile data');
+            }
+
+            const profileData = await response.json();
+            populateProfileForm(profileData);
+
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+            alert("Failed to load profile data. Please try again.");
+            closeProfileModal();
+        }
+    }
+
+    function populateProfileForm(data) {
+        profileUsernameInput.value = data.username || '';
+        profileDisplayNameInput.value = data.display_name || '';
+        profileAvatarUrlInput.value = data.avatar_url || '';
+        profileIsPublicCheckbox.checked = data.is_public || false;
+        profileFullNameInput.value = data.full_name || '';
+        profileSummaryTextarea.value = data.summary || '';
+        profileLocationInput.value = data.location || '';
+        
+        profileInstitutionInput.value = Array.isArray(data.institution) ? data.institution.join(', ') : '';
+        profileWebsitesInput.value = Array.isArray(data.websites) ? data.websites.join(', ') : '';
+        
+        try {
+            profileContactJsonTextarea.value = data.contact_json ? JSON.stringify(data.contact_json, null, 2) : '';
+        } catch (e) {
+            console.error("Error parsing contact_json:", e);
+            profileContactJsonTextarea.value = '';
+        }
+
+        try {
+            profilePreferencesTextarea.value = data.preferences ? JSON.stringify(data.preferences, null, 2) : '{"theme": "standard"}';
+        } catch (e) {
+            console.error("Error parsing preferences:", e);
+            profilePreferencesTextarea.value = '{"theme": "standard"}';
+        }
+    }
+
+    async function handleProfileUpdate(e) {
+        e.preventDefault();
+        const { token } = getSession();
+        if (!token) {
+            console.error("No token found for updating profile.");
+            return;
+        }
+
+        try {
+            const updatedProfile = {
+                username: profileUsernameInput.value,
+                display_name: profileDisplayNameInput.value,
+                avatar_url: profileAvatarUrlInput.value,
+                is_public: profileIsPublicCheckbox.checked,
+                full_name: profileFullNameInput.value,
+                summary: profileSummaryTextarea.value,
+                location: profileLocationInput.value,
+                // Split string inputs into arrays
+                institution: profileInstitutionInput.value.split(',').map(s => s.trim()).filter(s => s),
+                websites: profileWebsitesInput.value.split(',').map(s => s.trim()).filter(s => s),
+            };
+
+            // Parse JSON inputs
+            try {
+                updatedProfile.contact_json = profileContactJsonTextarea.value ? JSON.parse(profileContactJsonTextarea.value) : null;
+            } catch (e) {
+                alert("Invalid Contact Info JSON. Please correct it.");
+                return;
+            }
+            try {
+                updatedProfile.preferences = profilePreferencesTextarea.value ? JSON.parse(profilePreferencesTextarea.value) : '{"theme": "standard"}';
+            } catch (e) {
+                alert("Invalid Preferences JSON. Please correct it.");
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedProfile)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update profile');
+            }
+
+            alert('Profile updated successfully!');
+            // Optionally, re-fetch profile or update local session data if needed
+            closeProfileModal();
+
+        } catch (error) {
+            console.error("Error updating user profile:", error);
+            alert("Failed to update profile: " + error.message);
+        }
+    }
+
+    function closeProfileModal() {
+        profileOverlay.classList.remove('active');
+    }
+
     function resetForm() {
         authForm.reset();
         authError.style.display = 'none';
         authError.textContent = '';
+        if (currentMode === 'forgot') {
+            emailInput.value = ''; // Clear email for forgot password mode
+        }
     }
 
     function setMode(mode) {
+        const previousEmail = emailInput.value; // Store email before reset
         currentMode = mode;
         resetForm();
         
+        if (mode === 'login' || mode === 'signup') { // Restore email for login/signup modes
+            emailInput.value = previousEmail;
+        }
+
         if (mode === 'login') {
             authTitle.textContent = 'Login';
             authSubmit.textContent = 'Login';
@@ -520,12 +873,14 @@
                     if (data.access_token) {
                         localStorage.setItem("tinytorch_token", data.access_token);
                         localStorage.setItem("tinytorch_user", JSON.stringify(data.user));
+                        updateAuthButton(); // Update button state
                         window.location.href = '/dashboard.html';
                     }
                 } else {
                     // Signup Success
                     alert('Account created successfully! Please check your email to confirm before logging in.');
                     setMode('login'); // Switch to login
+                    updateAuthButton(); // Update button state
                 }
             }
 
@@ -546,6 +901,7 @@
         if (confirm('Are you sure you want to logout?')) {
             localStorage.removeItem("tinytorch_token");
             localStorage.removeItem("tinytorch_user");
+            updateAuthButton(); // Update button state
             window.location.href = '/';
         }
     }
@@ -571,10 +927,11 @@
     if (authBtn) {
         authBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            const { isLoggedIn } = getSession(); // Get current state
             if (isLoggedIn) {
-                handleLogout();
+                openProfileModal(); // Open profile modal for logged-in users
             } else {
-                openModal();
+                openModal(); // Open auth modal for logged-out users
             }
         });
     }
@@ -588,5 +945,15 @@
     if (authToggle) authToggle.addEventListener('click', handleToggle);
     if (forgotLink) forgotLink.addEventListener('click', () => setMode('forgot'));
     if (authForm) authForm.addEventListener('submit', handleAuth);
+
+    // Profile Modal Events
+    if (profileClose) profileClose.addEventListener('click', closeProfileModal);
+    if (profileOverlay) {
+        profileOverlay.addEventListener('click', (e) => {
+            if (e.target === profileOverlay) closeProfileModal();
+        });
+    }
+    if (profileLogoutBtn) profileLogoutBtn.addEventListener('click', handleLogout);
+    if (profileForm) profileForm.addEventListener('submit', handleProfileUpdate);
 
 })();

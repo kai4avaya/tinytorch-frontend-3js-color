@@ -1,0 +1,137 @@
+This is a professional API documentation file (in Markdown) for your `search-profiles` endpoint. You can save this as `API_DOCS.md` or share it directly with frontend developers who need to consume your API.
+
+-----
+
+# 🔍 API Documentation: Profile Search
+
+**Endpoint:** `search-profiles`  
+**Description:** A public, paginated search API to retrieve TinyTorch user profiles. It supports fuzzy text search across usernames, real names, and locations.
+
+## 1\. Connection Details
+
+| **Method** | **POST** |
+| :--- | :--- |
+| **URL** | `https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/search-profiles` |
+| **Auth** | **Public** (No `Authorization` header required) |
+| **CORS** | Restricted to `tinytorch.ai`, `localhost:2021`, `kai4avaya.github.io` |
+
+-----
+
+## 2\. Request Format
+
+### Headers
+
+You must strictly send JSON content.
+
+```http
+Content-Type: application/json
+```
+
+### Body Parameters
+
+Send a raw JSON object with the following fields:
+
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `query` | `string` | No | `""` | The search text. Matches against `username`, `full_name`, or `location`. If empty, returns the newest users. |
+| `page` | `integer` | No | `0` | The page number (Zero-index based). `0` is the first page. |
+| `limit` | `integer` | No | `20` | Number of results per page. |
+
+-----
+
+## 3\. Response Format
+
+The API returns a JSON array of profile objects.
+
+### Success (200 OK)
+
+```json
+[
+  {
+    "username": "bakukai",
+    "full_name": "Baku Kai",
+    "avatar_url": "https://...",
+    "institution": ["Harvard", "Edge Lab"],
+    "location": "Cambridge, MA",
+    "contact_json": {
+      "github": "bakukai",
+      "twitter": "@baku"
+    }
+  },
+  {
+    "username": "student_02",
+    "full_name": "Alice Smith",
+    ...
+  }
+]
+```
+
+### Error (400 Bad Request)
+
+```json
+{
+  "error": "Detailed error message here"
+}
+```
+
+-----
+
+## 4\. Usage Examples
+
+### A. JavaScript / TypeScript (`fetch`)
+
+Use this snippet in your frontend application.
+
+```javascript
+async function searchTinyTorch(query = "", page = 0) {
+  const url = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/search-profiles";
+  
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      query: query,   // e.g. "harvard"
+      page: page,     // e.g. 0 for first page
+      limit: 20
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data; // Returns Array of profiles
+}
+
+// Example: Search for "Kai"
+searchTinyTorch("Kai").then(profiles => console.log(profiles));
+```
+
+### B. cURL (Terminal Testing)
+
+*Note: This might fail locally if your terminal is not one of the "Allowed Origins", but it works for debugging if you add `-H "Origin: https://tinytorch.ai"`.*
+
+```bash
+curl -X POST https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/search-profiles \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://tinytorch.ai" \
+  -d '{
+    "query": "Kai",
+    "page": 0,
+    "limit": 5
+  }'
+```
+
+-----
+
+## 5\. Troubleshooting
+
+  * **Empty Result `[]`:**
+      * This means no users matched your query, or you requested a page number that is out of bounds (e.g., page 999).
+  * **CORS Error (blocked by CORS policy):**
+      * You are trying to call this API from an unauthorized domain. Ensure your website domain is added to the `ALLOWED_ORIGINS` array in the Edge Function code.
+  * **401 Unauthorized:**
+      * The function might have been deployed without the `--no-verify-jwt` flag. Redeploy with `supabase functions deploy search-profiles --no-verify-jwt`.
