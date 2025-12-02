@@ -282,7 +282,33 @@
       scale: Math.min(width, height) / 2.5
     };
 
-    const locations = [
+    // Major cities for rough location mapping (used when API lacks exact coords)
+    const CITIES = [
+      {lat: 34.0522, lng: -118.2437, name: "Los Angeles"},
+      {lat: 40.7128, lng: -74.0060, name: "New York"},
+      {lat: 51.5074, lng: -0.1278, name: "London"},
+      {lat: 35.6895, lng: 139.6917, name: "Tokyo"},
+      {lat: -33.8688, lng: 151.2093, name: "Sydney"},
+      {lat: 19.4326, lng: -99.1332, name: "Mexico City"},
+      {lat: -23.5505, lng: -46.6333, name: "Sao Paulo"},
+      {lat: 30.0444, lng: 31.2357, name: "Cairo"},
+      {lat: 28.6139, lng: 77.2090, name: "New Delhi"},
+      {lat: 55.7558, lng: 37.6173, name: "Moscow"},
+      {lat: -1.2921, lng: 36.8219, name: "Nairobi"},
+      {lat: 48.8566, lng: 2.3522, name: "Paris"},
+      {lat: 39.9042, lng: 116.4074, name: "Beijing"},
+      {lat: 13.7563, lng: 100.5018, name: "Bangkok"},
+      {lat: -26.2041, lng: 28.0473, name: "Johannesburg"},
+      {lat: 41.0082, lng: 28.9784, name: "Istanbul"},
+      {lat: 6.5244, lng: 3.3792, name: "Lagos"},
+      {lat: 37.7749, lng: -122.4194, name: "San Francisco"},
+      {lat: 1.3521, lng: 103.8198, name: "Singapore"},
+      {lat: 52.5200, lng: 13.4050, name: "Berlin"},
+      {lat: 22.5726, lng: 88.3639, name: "Kolkata"}
+    ];
+
+    // Fallback data if API fails or returns empty (preserving original demo data)
+    const fallbackLocations = [
         {"latitude": 22, "longitude": 88, "user": "dev_guru_88", "completed": 85, "institution": "IIT Kharagpur"},
         {"latitude": 12.61315, "longitude": 38.37723, "user": "ethiopia_code", "completed": 92, "institution": "Addis Ababa Univ"},
         {"latitude": -30, "longitude": -58, "user": "arg_hacker", "completed": 64, "institution": "Univ of Buenos Aires"},
@@ -293,6 +319,9 @@
         {"latitude": 23.634501, "longitude": -102.552784, "user": "mx_fullstack", "completed": 72, "institution": "UNAM"},
         {"latitude": 42.3736, "longitude": -71.1097, "user": "crimson_dev", "completed": 95, "institution": "Harvard University"}
     ];
+
+    let locations = []; 
+    const API_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/search-profiles";
 
     const svg = d3.select('#globe-svg');
     const tooltip = d3.select('#tooltip');
@@ -341,7 +370,65 @@
           .attr("d", path);
         
         startAnimation();
+        fetchProfiles(); // Load real data
       });
+
+    // Helper: Get rough coords from string hash (Deterministic)
+    function getRoughCoords(str) {
+        if (!str) str = "unknown";
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % CITIES.length;
+        const city = CITIES[index];
+        // Add jitter (±5 deg) so multiple users in same "rough" location don't overlap perfectly
+        return {
+            latitude: city.lat + (Math.random() - 0.5) * 5,
+            longitude: city.lng + (Math.random() - 0.5) * 5
+        };
+    }
+
+    // API Fetch Logic
+    async function fetchProfiles(query = "") {
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ query: query, page: 0, limit: 20 })
+            });
+            
+            if (!response.ok) throw new Error("API Error: " + response.status);
+            const data = await response.json();
+
+            if (Array.isArray(data) && data.length > 0) {
+                locations = data.map(p => {
+                    const coords = getRoughCoords(p.location || p.username);
+                    return {
+                        latitude: coords.latitude,
+                        longitude: coords.longitude,
+                        user: p.username,
+                        completed: "Member", // Data not provided by search API
+                        institution: Array.isArray(p.institution) ? p.institution.join(", ") : (p.institution || "Unknown")
+                    };
+                });
+            } else {
+               // If no results (and no query), use fallback
+               if (!query && locations.length === 0) {
+                   locations = fallbackLocations;
+               } else if (query) {
+                   // If searching and no results, clear map
+                   locations = [];
+               }
+            }
+        } catch (e) {
+            console.warn("Fetch failed, using fallback data.", e);
+            if (locations.length === 0) locations = fallbackLocations;
+        }
+        
+        renderMarkers();
+        if (query) updateSearchDropdown(query);
+    }
 
     // Drag Behavior
     const drag = d3.drag()
@@ -370,49 +457,54 @@
     // --- Search Logic ---
     const searchInput = document.getElementById('user-search');
     const searchDropdown = document.getElementById('search-dropdown');
+    let debounceTimer;
 
     searchInput.addEventListener('input', (e) => {
-      const val = e.target.value.toLowerCase();
-      searchDropdown.innerHTML = '';
+      const val = e.target.value;
+      clearTimeout(debounceTimer);
       
       if (!val) {
         searchDropdown.style.display = 'none';
+        fetchProfiles(""); // Reset
         return;
       }
 
-      const matches = locations.filter(l => l.user.toLowerCase().includes(val));
-      
-      if (matches.length > 0) {
-        searchDropdown.style.display = 'block';
-        matches.forEach(match => {
-          const div = document.createElement('div');
-          div.className = 'search-item';
-          div.textContent = match.user;
-          div.onclick = () => {
-             searchInput.value = match.user;
-             searchDropdown.style.display = 'none';
-             focusUser(match);
-          };
-          searchDropdown.appendChild(div);
-        });
-      } else {
-        searchDropdown.style.display = 'none';
-      }
+      debounceTimer = setTimeout(() => {
+          fetchProfiles(val);
+      }, 500); // Debounce API calls
     });
     
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-             const val = searchInput.value.toLowerCase();
-             // Exact match priority, then fuzzy
-             const match = locations.find(l => l.user.toLowerCase() === val) || 
-                           locations.find(l => l.user.toLowerCase().includes(val));
-             if (match) {
-                 searchDropdown.style.display = 'none';
-                 searchInput.value = match.user; 
-                 focusUser(match);
-             }
+             clearTimeout(debounceTimer);
+             fetchProfiles(searchInput.value);
+             searchDropdown.style.display = 'none';
         }
     });
+
+    // Update dropdown with current locations (which are now the search results)
+    function updateSearchDropdown(query) {
+        searchDropdown.innerHTML = '';
+        // Only show first 5-8 in dropdown to avoid clutter
+        const matches = locations.slice(0, 8);
+        
+        if (matches.length > 0) {
+            searchDropdown.style.display = 'block';
+            matches.forEach(match => {
+              const div = document.createElement('div');
+              div.className = 'search-item';
+              div.textContent = match.user;
+              div.onclick = () => {
+                 searchInput.value = match.user;
+                 searchDropdown.style.display = 'none';
+                 focusUser(match);
+              };
+              searchDropdown.appendChild(div);
+            });
+        } else {
+            searchDropdown.style.display = 'none';
+        }
+    }
 
     // Close dropdown if clicking outside
     document.addEventListener('click', (e) => {
@@ -458,22 +550,26 @@
         updateMarkerPositions();
     }
 
-    // Initialize Markers (Run once)
-    function initMarkers() {
-      // Binds data and attaches listeners ONLY ONCE
+    // Render Markers (Handles Enter/Exit)
+    function renderMarkers() {
       const markers = markerGroup.selectAll('circle.marker')
-        .data(locations)
-        .enter()
+        .data(locations, d => d.user); // Key by user to ensure smooth transitions
+
+      // Exit
+      markers.exit().transition().duration(500).attr("r", 0).remove();
+
+      // Enter
+      const enter = markers.enter()
         .append('circle')
         .attr('class', 'marker')
-        .attr('r', 4)
+        .attr('r', 0) // Start small
         .on("mouseover", function(event, d) {
             isHovering = true;
             d3.select(this).transition().duration(200).attr("r", 7);
             
             tooltip.html(`
                 <h3>${d.user}</h3>
-                <div class="info-row">Progress: <span class="highlight">${d.completed}%</span></div>
+                <div class="info-row">Status: <span class="highlight">${d.completed}</span></div>
                 <div class="info-row"><i>${d.institution}</i></div>
             `);
 
@@ -487,18 +583,15 @@
             d3.select(this).transition().duration(200).attr("r", 4);
             tooltip.style("opacity", 0);
         });
+
+      enter.transition().duration(500).attr("r", 4);
     }
 
     // Update positions (Run every frame)
     function updateMarkerPositions() {
-      // Ensure we have markers
       const markers = markerGroup.selectAll('circle.marker');
       
-      // If no markers yet (data loading race condition), init them
-      if (markers.empty()) {
-        initMarkers();
-        return; 
-      }
+      if (markers.empty()) return;
 
       markers.each(function(d) {
         const coordinate = [d.longitude, d.latitude];
