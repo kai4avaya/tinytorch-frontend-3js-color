@@ -339,6 +339,7 @@
                 right: 20px;
             }
         }
+
     `;
     document.head.appendChild(style);
 
@@ -367,10 +368,10 @@
 
         <nav class="sidebar" id="sidebar">
             <a href="#" class="nav-item">Home</a>
-            <a href="#" class="nav-item">About</a>
-            <a href="#" class="nav-item">Events</a>
+            <a href="about.html" class="nav-item" id="aboutLink">About</a>
+            <a href="events.html" class="nav-item">Events</a>
             <a href="community.html" class="nav-item">Community</a>
-            <a href="#" class="nav-item">Contact</a>
+            <a href="contact.html" class="nav-item">Contact</a>
         </nav>
 
         <!-- Auth Modal -->
@@ -545,7 +546,7 @@
         if (confirm('Are you sure you want to logout?')) {
             localStorage.removeItem("tinytorch_token");
             localStorage.removeItem("tinytorch_user");
-            window.location.reload();
+            window.location.href = '/';
         }
     }
 
