@@ -1,0 +1,125 @@
+Here is a clean, professional **API Interface Documentation** you can copy and paste to hand off to another engineer (frontend, CLI, or backend).
+
+It covers exactly how to authenticate, what data can be sent, and how to handle errors.
+
+-----
+
+# 🛠️ API Documentation: Update Profile
+
+**Endpoint:** `update-profile`
+**Description:** Securely updates the authenticated user's profile details. This function validates the user token, ensures username uniqueness, and filters out immutable fields (like email).
+
+### 1\. Connection Details
+
+| **Method** | **POST** |
+| :--- | :--- |
+| **URL** | `https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/update-profile` |
+| **Auth** | **Required**. (Bearer Token) |
+
+### 2\. Authentication
+
+You **must** provide the user's `access_token` (JWT) obtained from the login process. The function uses this to identify *which* user is being updated. You cannot update another user's profile.
+
+```http
+Authorization: Bearer <USER_ACCESS_TOKEN>
+```
+
+### 3\. Request Body
+
+Send a JSON object. **All fields are optional**; you only need to send the fields you want to change (Partial Update).
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `username` | `string` | Must be unique across the platform. Returns error if taken. |
+| `full_name` | `string` | User's real name. |
+| `summary` | `string` | Short bio or description. |
+| `location` | `string` | City/State/Country. |
+| `institution` | `array[string]` | List of affiliations, e.g., `["Harvard", "Edge Lab"]` |
+| `preferences` | `json` | UI settings, e.g., `{"theme": "dark"}` |
+| `contact_json` | `json` | Social links object (see structure below). |
+
+**Note:** Fields like `email`, `id`, and `is_public` are **ignored** by this endpoint for security.
+
+### 4\. Example Payload
+
+```json
+{
+  "username": "new_cool_handle",
+  "full_name": "Jane Doe",
+  "location": "New York, NY",
+  "institution": ["MIT", "Media Lab"],
+  "contact_json": {
+    "github": "janedoe",
+    "twitter": "@jane",
+    "linkedin": "jane-doe-123"
+  },
+  "preferences": {
+    "theme": "dracula"
+  }
+}
+```
+
+### 5\. Implementation Examples
+
+#### A. JavaScript / TypeScript (Frontend)
+
+```javascript
+const updateUserProfile = async (token, updates) => {
+  const response = await fetch('https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/update-profile', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(updates)
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error("Update Failed:", data.error);
+    // Common errors: "Username already taken", "Invalid Token"
+    return null;
+  }
+
+  return data; // Returns the full updated profile object
+};
+
+// Usage
+updateUserProfile(userSession.access_token, { location: "San Francisco" });
+```
+
+#### B. Python (For the CLI Engineer)
+
+```python
+import requests
+import json
+
+def update_profile(access_token, **kwargs):
+    url = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1/update-profile"
+    
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    
+    # kwargs allows passing only the fields you want to update
+    # e.g. update_profile(token, location="Boston")
+    response = requests.post(url, headers=headers, json=kwargs)
+    
+    if response.status_code == 200:
+        print("✅ Profile Updated")
+        return response.json()
+    else:
+        print(f"❌ Error {response.status_code}: {response.text}")
+        return None
+```
+
+### 6\. Error Handling
+
+| Status Code | Reason | What to do |
+| :--- | :--- | :--- |
+| **200** | OK | Update successful. UI should reflect changes. |
+| **400** | Bad Request | Check the error message. Usually **"Username already taken"**. |
+| **401** | Unauthorized | Token is missing, expired, or invalid. Log the user out or refresh token. |
+| **500** | Server Error | Database connection issue. Retry later. |

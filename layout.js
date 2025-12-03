@@ -124,7 +124,107 @@
             color: #ff6600;
         }
 
-        /* --- Modal Styles --- */
+                                .nav-item-restricted {
+
+                                    display: flex;
+
+                                    align-items: center;
+
+                                    position: relative; /* Add back relative positioning for tooltip */
+
+                                    /* Existing padding from .nav-item will apply */
+
+                                }
+
+                
+
+                                .lock-container {
+
+                                    display: flex;
+
+                                    align-items: center;
+
+                                    /* Removed order: -1; */
+
+                                    margin-left: 8px; /* Slightly more space between text and lock */
+
+                                    position: relative; /* Make lock-container relative for tooltip positioning */
+
+                                }
+
+                
+
+                                .lock-icon {
+
+                                    width: 18px;
+
+                                    height: 18px;
+
+                                    fill: #999; /* Greyed out lock */
+
+                                    transition: fill 0.2s;
+
+                                }
+
+                
+
+                                .lock-tooltip {
+
+                                    position: absolute;
+
+                                    bottom: 100%; /* Position above the lock-container */
+
+                                    left: 50%;
+
+                                    transform: translateX(-50%) translateY(-5px); /* Center horizontally and add slight gap */
+
+                                    background: rgba(0, 0, 0, 0.8);
+
+                                    color: white;
+
+                                    font-size: 0.7rem;
+
+                                    padding: 5px 8px;
+
+                                    border-radius: 4px;
+
+                                    white-space: nowrap;
+
+                                    opacity: 0;
+
+                                    visibility: hidden;
+
+                                    transition: opacity 0.2s, visibility 0.2s;
+
+                                    pointer-events: none;
+
+                                    z-index: 10;
+
+                                }
+
+                
+
+                                /* Hover on parent nav-item-restricted shows tooltip */
+
+                                .nav-item-restricted:hover .lock-tooltip {
+
+                                    opacity: 1;
+
+                                    visibility: visible;
+
+                                }
+
+                
+
+                                .nav-item-restricted:hover .lock-icon {
+
+                                    fill: #ff6600; /* Orange lock on hover */
+
+                                }
+
+                
+
+                /* --- Modal Styles --- */
         .auth-overlay {
             position: fixed;
             top: 0;
@@ -474,7 +574,7 @@
     function updateAuthButton() {
         const { isLoggedIn, email: userEmail } = getSession();
         const currentIcon = isLoggedIn ? logoutIcon : userIcon;
-        const btnText = isLoggedIn ? `Logout of ${userEmail}` : 'Create Account';
+        const btnText = isLoggedIn ? `${userEmail}` : 'Create or Login into Account';
         const btnClass = isLoggedIn ? 'login-btn logged-in' : 'login-btn';
 
         const authBtnElement = document.getElementById('authBtn');
@@ -509,8 +609,20 @@
             <a href="/" class="nav-item">Home</a>
             <a href="about.html" class="nav-item" id="aboutLink">About</a>
             <a href="events.html" class="nav-item">Events</a>
-            <a href="community.html" class="nav-item">Community</a>
-            <a href="dashboard.html" class="nav-item">Dashboard</a>
+            <a href="community.html" class="nav-item nav-item-restricted">
+                <span>Community</span>
+                <span class="lock-container">
+                    <svg class="lock-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-10H9V7c0-1.66 1.34-3 3-3s3 1.34 3 3v3z"/></svg>
+                    <span class="lock-tooltip">Account Required</span>
+                </span>
+            </a>
+            <a href="dashboard.html" class="nav-item nav-item-restricted">
+                <span>Dashboard</span>
+                <span class="lock-container">
+                    <svg class="lock-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-10H9V7c0-1.66 1.34-3 3-3s3 1.34 3 3v3z"/></svg>
+                    <span class="lock-tooltip">Account Required</span>
+                </span>
+            </a>
             <a href="contact.html" class="nav-item">Contact</a>
         </nav>
 
@@ -631,11 +743,9 @@
     // Modal State
     let currentMode = 'signup'; // 'login', 'signup', 'forgot'
 
-    function openModal() {
+    function openModal(mode = 'signup') { // Added mode parameter with default
         authOverlay.classList.add('active');
-        // Default to signup if not specified, or maintain last state?
-        // Let's default to signup like before, or intelligent default
-        setMode('signup');
+        setMode(mode); // Use the provided mode
     }
 
     function closeModal() {
@@ -872,6 +982,7 @@
                     // Login Success
                     if (data.access_token) {
                         localStorage.setItem("tinytorch_token", data.access_token);
+                        if (data.refresh_token) localStorage.setItem("tinytorch_refresh_token", data.refresh_token);
                         localStorage.setItem("tinytorch_user", JSON.stringify(data.user));
                         updateAuthButton(); // Update button state
                         window.location.href = '/dashboard.html';
@@ -955,5 +1066,16 @@
     }
     if (profileLogoutBtn) profileLogoutBtn.addEventListener('click', handleLogout);
     if (profileForm) profileForm.addEventListener('submit', handleProfileUpdate);
+
+    // Check for redirect action
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'login') {
+        // Clear any stale tokens just in case
+        localStorage.removeItem("tinytorch_token");
+        localStorage.removeItem("tinytorch_refresh_token");
+        localStorage.removeItem("tinytorch_user");
+        updateAuthButton();
+        openModal('login'); // Explicitly open in login mode
+    }
 
 })();
