@@ -1,6 +1,15 @@
 (function() {
     // Configuration
-    const API_BASE_URL = "https://tinytorch.netlify.app"; 
+    const SUPABASE_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1";
+    const NETLIFY_URL = "https://tinytorch.netlify.app"; 
+
+    function forceLogin() {
+        console.warn("Session expired or invalid. Redirecting to login...");
+        localStorage.removeItem("tinytorch_token");
+        localStorage.removeItem("tinytorch_refresh_token");
+        localStorage.removeItem("tinytorch_user");
+        window.location.href = '/index.html?action=login';
+    }
 
     // State Management
     function getSession() {
@@ -377,10 +386,12 @@
 
         .profile-modal {
             background: white;
-            padding: 40px;
+            padding: 30px;
             border-radius: 20px;
             width: 90%;
             max-width: 500px; /* Slightly wider for profile fields */
+            max-height: 80vh; /* Cap modal height strictly */
+            overflow-y: auto; /* Enable scrolling for overflow content */
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             position: relative;
             transform: translateY(20px);
@@ -658,10 +669,31 @@
                         <label for="profileDisplayName" class="profile-label">Display Name:</label>
                         <input type="text" class="profile-input" id="profileDisplayName" placeholder="Display Name">
                     </div>
+                    
+                    <!-- Avatar Section -->
                     <div class="profile-form-group">
-                        <label for="profileAvatarUrl" class="profile-label">Avatar URL:</label>
-                        <input type="text" class="profile-input" id="profileAvatarUrl" placeholder="https://example.com/avatar.jpg">
+                        <label class="profile-label">Avatar:</label>
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                            <img id="avatarPreview" src="" alt="Preview" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #eee; border: 1px solid #ddd;">
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <button type="button" id="btnUpload" style="font-size: 0.8rem; padding: 4px 8px; cursor: pointer;">Upload Image</button>
+                                <button type="button" id="btnCamera" style="font-size: 0.8rem; padding: 4px 8px; cursor: pointer;">Use Camera</button>
+                            </div>
+                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                        </div>
+                        
+                        <!-- Camera UI (Hidden) -->
+                        <div id="cameraContainer" style="display: none; margin-bottom: 10px; text-align: center;">
+                            <video id="cameraVideo" autoplay playsinline style="width: 100%; max-width: 300px; background: #000; border-radius: 8px;"></video>
+                            <br>
+                            <button type="button" id="btnSnap" style="margin-top: 5px; background: #ff6600; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Take Photo</button>
+                            <button type="button" id="btnStopCamera" style="margin-top: 5px; background: #666; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Cancel</button>
+                            <canvas id="cameraCanvas" style="display: none;"></canvas>
+                        </div>
+
+                        <input type="text" class="profile-input" id="profileAvatarUrl" placeholder="https://example.com/avatar.jpg or Data URL">
                     </div>
+
                     <div class="profile-form-group">
                         <label for="profileFullName" class="profile-label">Full Name:</label>
                         <input type="text" class="profile-input" id="profileFullName" placeholder="Your Full Name">
@@ -740,6 +772,157 @@
     const profileSubmitBtn = document.getElementById('profileSubmit');
     const profileLogoutBtn = document.getElementById('profileLogoutBtn');
 
+    // --- Avatar Logic ---
+    const avatarPreview = document.getElementById('avatarPreview');
+    const btnUpload = document.getElementById('btnUpload');
+    const btnCamera = document.getElementById('btnCamera');
+    const fileInput = document.getElementById('fileInput');
+    const cameraContainer = document.getElementById('cameraContainer');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const btnSnap = document.getElementById('btnSnap');
+    const btnStopCamera = document.getElementById('btnStopCamera');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    let mediaStream = null;
+
+    // Helper to resize images
+    function resizeImage(file, maxWidth, maxHeight, quality) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = (err) => reject(err);
+                img.src = event.target.result;
+            };
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 1. Preview on Input Change
+    if (profileAvatarUrlInput) {
+        profileAvatarUrlInput.addEventListener('input', () => {
+            avatarPreview.src = profileAvatarUrlInput.value || ''; // Fallback to placeholder or empty
+        });
+    }
+
+    // 2. File Upload
+    if (btnUpload && fileInput) {
+        btnUpload.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                try {
+                    // Resize to thumbnail size (e.g., 300x300)
+                    const result = await resizeImage(file, 300, 300, 0.7);
+                    profileAvatarUrlInput.value = result;
+                    avatarPreview.src = result;
+                } catch (err) {
+                    console.error("Error resizing image:", err);
+                    alert("Failed to process image. Please try another file.");
+                }
+            }
+        });
+    }
+
+    // 3. Camera Logic
+    async function startCamera() {
+        try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            cameraVideo.srcObject = mediaStream;
+            cameraContainer.style.display = 'block';
+        } catch (err) {
+            console.error("Camera access denied:", err);
+            alert("Could not access camera. Please check permissions.");
+        }
+    }
+
+    function stopCamera() {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+        cameraContainer.style.display = 'none';
+    }
+
+    if (btnCamera) {
+        btnCamera.addEventListener('click', startCamera);
+    }
+    
+    if (btnStopCamera) {
+        btnStopCamera.addEventListener('click', stopCamera);
+    }
+
+    if (btnSnap) {
+        btnSnap.addEventListener('click', () => {
+            if (!mediaStream) return;
+            
+            // Set canvas dims to video dims but constrained
+            let w = cameraVideo.videoWidth;
+            let h = cameraVideo.videoHeight;
+            
+            // Constrain to 300x300 max while preserving aspect ratio
+            const MAX_DIM = 300;
+            if (w > h) {
+                if (w > MAX_DIM) {
+                    h = Math.round((h * MAX_DIM) / w);
+                    w = MAX_DIM;
+                }
+            } else {
+                if (h > MAX_DIM) {
+                    w = Math.round((w * MAX_DIM) / h);
+                    h = MAX_DIM;
+                }
+            }
+
+            cameraCanvas.width = w;
+            cameraCanvas.height = h;
+            
+            const ctx = cameraCanvas.getContext('2d');
+            ctx.drawImage(cameraVideo, 0, 0, w, h);
+            
+            // Convert to Data URL (JPEG for smaller size)
+            const dataUrl = cameraCanvas.toDataURL('image/jpeg', 0.7);
+            
+            profileAvatarUrlInput.value = dataUrl;
+            avatarPreview.src = dataUrl;
+            
+            stopCamera();
+        });
+    }
+
+    // Update populate to set initial preview
+    const originalPopulate = populateProfileForm;
+    populateProfileForm = function(data) {
+        originalPopulate(data);
+        if(avatarPreview) {
+             avatarPreview.src = data.avatar || ''; // Set initial preview
+        }
+    };
+
     // Modal State
     let currentMode = 'signup'; // 'login', 'signup', 'forgot'
 
@@ -758,53 +941,121 @@
     }
 
     async function fetchUserProfile() {
-        const { token } = getSession();
+        let token = localStorage.getItem("tinytorch_token"); 
         if (!token) {
             console.error("No token found for fetching profile.");
-            closeProfileModal();
-            openModal();
+            forceLogin(); 
             return;
         }
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/profile`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+        let profileData = null;
+        let retryCount = 0;
+        const MAX_RETRIES = 1; 
+
+        do {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/get-profile-details`, { 
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // Check for 401 OR 400 with specific "Invalid Token" error
+                let needsRefresh = response.status === 401;
+                let errorData = null;
+
+                if (response.status === 400) {
+                    // Clone response to safely check body for specific error message
+                    try {
+                        errorData = await response.clone().json();
+                        if (errorData && errorData.error && errorData.error.includes("Invalid Token")) {
+                            needsRefresh = true;
+                        }
+                    } catch(e) { /* ignore parse error */ }
                 }
-            });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch profile data');
+                if (needsRefresh && retryCount === 0) {
+                    console.log("Token expired or invalid (400/401). Attempting refresh...");
+                    const refreshToken = localStorage.getItem("tinytorch_refresh_token");
+                    if (!refreshToken) { forceLogin(); return; }
+
+                    const refreshRes = await fetch(`${NETLIFY_URL}/api/auth/refresh`, { 
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ refreshToken })
+                    });
+
+                    if (!refreshRes.ok) { forceLogin(); return; }
+
+                    const refreshData = await refreshRes.json();
+                    if (refreshData.session) {
+                        token = refreshData.session.access_token;
+                        localStorage.setItem("tinytorch_token", token);
+                        if (refreshData.session.refresh_token) {
+                            localStorage.setItem("tinytorch_refresh_token", refreshData.session.refresh_token);
+                        }
+                        retryCount++; 
+                        continue; 
+                    } else {
+                        forceLogin();
+                        return;
+                    }
+                }
+
+                if (!response.ok) {
+                    // If errorData wasn't parsed yet (e.g. not a 400 or parse failed), try now
+                    if (!errorData) {
+                         try { errorData = await response.json(); } catch(e) {}
+                    }
+                    throw new Error(errorData?.error || `Failed to fetch profile data: ${response.status}`);
+                }
+
+                profileData = await response.json();
+                populateProfileForm(profileData.profile); 
+                return; 
+            } catch (error) {
+                console.error("Error fetching user profile:", error);
+                // Don't alert immediately on first fail if we might be refreshing, 
+                // but here we are inside the catch, meaning a hard error occurred.
+                if (retryCount >= MAX_RETRIES || !error.message.includes("Invalid Token")) {
+                    alert("Failed to load profile data. Please try again.");
+                    closeProfileModal();
+                }
+                return; 
             }
+        } while (retryCount < MAX_RETRIES);
 
-            const profileData = await response.json();
-            populateProfileForm(profileData);
-
-        } catch (error) {
-            console.error("Error fetching user profile:", error);
-            alert("Failed to load profile data. Please try again.");
+        if (!profileData) {
+            alert("Failed to load profile data after multiple attempts. Please try again.");
             closeProfileModal();
         }
     }
 
     function populateProfileForm(data) {
+        // Map API response keys to Form Input IDs
+        // Response: avatar, bio, socials, institution (array), websites (array), display_name, preferences, is_public
+        
         profileUsernameInput.value = data.username || '';
         profileDisplayNameInput.value = data.display_name || '';
-        profileAvatarUrlInput.value = data.avatar_url || '';
+        profileAvatarUrlInput.value = data.avatar || data.avatar_url || ''; // Support both
         profileIsPublicCheckbox.checked = data.is_public || false;
         profileFullNameInput.value = data.full_name || '';
-        profileSummaryTextarea.value = data.summary || '';
+        profileSummaryTextarea.value = data.bio || data.summary || ''; // Support both
         profileLocationInput.value = data.location || '';
         
-        profileInstitutionInput.value = Array.isArray(data.institution) ? data.institution.join(', ') : '';
-        profileWebsitesInput.value = Array.isArray(data.websites) ? data.websites.join(', ') : '';
+        // Handle Arrays
+        profileInstitutionInput.value = Array.isArray(data.institution) ? data.institution.join(', ') : (data.institution || '');
         
+        const sites = data.website || data.websites; // Prioritize 'website' based on DB response
+        profileWebsitesInput.value = Array.isArray(sites) ? sites.join(', ') : (sites || '');
+        
+        // Handle JSON objects
         try {
-            profileContactJsonTextarea.value = data.contact_json ? JSON.stringify(data.contact_json, null, 2) : '';
+            profileContactJsonTextarea.value = data.socials ? JSON.stringify(data.socials, null, 2) : ''; // API returns 'socials'
         } catch (e) {
-            console.error("Error parsing contact_json:", e);
+            console.error("Error parsing socials:", e);
             profileContactJsonTextarea.value = '';
         }
 
@@ -818,62 +1069,111 @@
 
     async function handleProfileUpdate(e) {
         e.preventDefault();
-        const { token } = getSession();
+        let token = localStorage.getItem("tinytorch_token"); 
         if (!token) {
             console.error("No token found for updating profile.");
+            forceLogin();
             return;
         }
 
+        const updatedProfile = {
+            username: profileUsernameInput.value,
+            display_name: profileDisplayNameInput.value,
+            avatar: profileAvatarUrlInput.value, // Changed from avatar_url to match GET response
+            is_public: profileIsPublicCheckbox.checked,
+            full_name: profileFullNameInput.value,
+            summary: profileSummaryTextarea.value,
+            location: profileLocationInput.value,
+            // Split string inputs into arrays
+            institution: profileInstitutionInput.value.split(',').map(s => s.trim()).filter(s => s),
+            website: profileWebsitesInput.value.split(',').map(s => s.trim()).filter(s => s), // Changed from websites to website
+        };
+        
+        console.log("Sending Profile Update Payload:", updatedProfile); // Debug payload
+
         try {
-            const updatedProfile = {
-                username: profileUsernameInput.value,
-                display_name: profileDisplayNameInput.value,
-                avatar_url: profileAvatarUrlInput.value,
-                is_public: profileIsPublicCheckbox.checked,
-                full_name: profileFullNameInput.value,
-                summary: profileSummaryTextarea.value,
-                location: profileLocationInput.value,
-                // Split string inputs into arrays
-                institution: profileInstitutionInput.value.split(',').map(s => s.trim()).filter(s => s),
-                websites: profileWebsitesInput.value.split(',').map(s => s.trim()).filter(s => s),
-            };
-
-            // Parse JSON inputs
-            try {
-                updatedProfile.contact_json = profileContactJsonTextarea.value ? JSON.parse(profileContactJsonTextarea.value) : null;
-            } catch (e) {
-                alert("Invalid Contact Info JSON. Please correct it.");
-                return;
-            }
-            try {
-                updatedProfile.preferences = profilePreferencesTextarea.value ? JSON.parse(profilePreferencesTextarea.value) : '{"theme": "standard"}';
-            } catch (e) {
-                alert("Invalid Preferences JSON. Please correct it.");
-                return;
-            }
-
-            const response = await fetch(`${API_BASE_URL}/api/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updatedProfile)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update profile');
-            }
-
-            alert('Profile updated successfully!');
-            // Optionally, re-fetch profile or update local session data if needed
-            closeProfileModal();
-
-        } catch (error) {
-            console.error("Error updating user profile:", error);
-            alert("Failed to update profile: " + error.message);
+            updatedProfile.contact_json = profileContactJsonTextarea.value ? JSON.parse(profileContactJsonTextarea.value) : null;
+        } catch (e) {
+            alert("Invalid Contact Info JSON. Please correct it.");
+            return;
         }
+        try {
+            updatedProfile.preferences = profilePreferencesTextarea.value ? JSON.parse(profilePreferencesTextarea.value) : '{"theme": "standard"}';
+        } catch (e) {
+            alert("Invalid Preferences JSON. Please correct it.");
+            return;
+        }
+
+        let retryCount = 0;
+        const MAX_RETRIES = 1; 
+
+        do {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/update-profile`, { 
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedProfile)
+                });
+
+                let needsRefresh = response.status === 401;
+                let errorData = null;
+
+                if (response.status === 400) {
+                    try {
+                        errorData = await response.clone().json();
+                        if (errorData && errorData.error && errorData.error.includes("Invalid Token")) {
+                            needsRefresh = true;
+                        }
+                    } catch(e) {}
+                }
+
+                if (needsRefresh && retryCount === 0) {
+                    console.log("Token expired or invalid during update (400/401). Attempting refresh...");
+                    const refreshToken = localStorage.getItem("tinytorch_refresh_token");
+                    if (!refreshToken) { forceLogin(); return; }
+
+                    const refreshRes = await fetch(`${NETLIFY_URL}/api/auth/refresh`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ refreshToken })
+                    });
+
+                    if (!refreshRes.ok) { forceLogin(); return; }
+
+                    const refreshData = await refreshRes.json();
+                    if (refreshData.session) {
+                        token = refreshData.session.access_token;
+                        localStorage.setItem("tinytorch_token", token);
+                        if (refreshData.session.refresh_token) {
+                            localStorage.setItem("tinytorch_refresh_token", refreshData.session.refresh_token);
+                        }
+                        retryCount++;
+                        continue;
+                    } else {
+                        forceLogin();
+                        return;
+                    }
+                }
+
+                if (!response.ok) {
+                    if (!errorData) {
+                         try { errorData = await response.json(); } catch(e) {}
+                    }
+                    throw new Error(errorData?.error || 'Failed to update profile');
+                }
+
+                alert('Profile updated successfully!');
+                closeProfileModal();
+                return; 
+            } catch (error) {
+                console.error("Error updating user profile:", error);
+                alert("Failed to update profile: " + error.message);
+                return; 
+            }
+        } while (retryCount < MAX_RETRIES);
     }
 
     function closeProfileModal() {
@@ -952,7 +1252,7 @@
                 body = { email, password };
             }
             
-            const url = `${API_BASE_URL}${endpoint}`;
+            const url = `${NETLIFY_URL}${endpoint}`;
 
             const response = await fetch(url, {
                 method: 'POST',

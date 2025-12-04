@@ -1100,9 +1100,9 @@
         }
 
         // --- USER PROGRESS INTEGRATION ---
-        const SUPABASE_EDGE_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1";
-        // IMPORTANT: API_BASE_URL now points to the Supabase Edge Functions for all backend calls
-        const API_BASE_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1"; 
+        const SUPABASE_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1";
+        const NETLIFY_URL = "https://tinytorch.netlify.app";
+        const API_BASE_URL = SUPABASE_URL; // Backwards compatibility
         
         const MODULE_MAP = {
           "01": { id: "01", title: "Tensor Basics", dir: "01_tensor" },
@@ -1142,51 +1142,82 @@
               forceLogin();
               return null;
           }
+          
+          let detailsData = null;
+          let retryCount = 0;
+          const MAX_RETRIES = 1;
 
-          try {
-            // 1. Direct Fetch using Token (Edge Function resolves User ID)
-            let profileRes = await fetch(`${API_BASE_URL}/get-profile-details`, { 
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            // Handle 401 / Refresh
-            if (profileRes.status === 401) {
-                console.log("Token expired. Attempting refresh...");
-                const refreshToken = localStorage.getItem("tinytorch_refresh_token");
-                if (!refreshToken) { forceLogin(); return null; }
-
-                const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ refreshToken })
+          do {
+              try {
+                // 1. Direct Fetch using Token (Edge Function resolves User ID)
+                const profileRes = await fetch(`${SUPABASE_URL}/get-profile-details`, { 
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!refreshRes.ok) { forceLogin(); return null; }
+                // Check for 401 OR 400 with specific "Invalid Token" error
+                let needsRefresh = profileRes.status === 401;
+                let errorData = null;
 
-                const refreshData = await refreshRes.json();
-                if (refreshData.session) {
-                    token = refreshData.session.access_token;
-                    localStorage.setItem("tinytorch_token", token);
-                    if (refreshData.session.refresh_token) {
-                        localStorage.setItem("tinytorch_refresh_token", refreshData.session.refresh_token);
-                    }
-                    // Retry Profile Fetch with new token
-                    profileRes = await fetch(`${API_BASE_URL}/get-profile-details`, {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${token}` }
+                if (profileRes.status === 400) {
+                    // Clone response to safely check body for specific error message
+                    try {
+                        errorData = await profileRes.clone().json();
+                        if (errorData && errorData.error && errorData.error.includes("Invalid Token")) {
+                            needsRefresh = true;
+                        }
+                    } catch(e) { /* ignore parse error */ }
+                }
+
+                if (needsRefresh && retryCount === 0) {
+                    console.log("Token expired or invalid (400/401). Attempting refresh...");
+                    const refreshToken = localStorage.getItem("tinytorch_refresh_token");
+                    if (!refreshToken) { forceLogin(); return null; }
+
+                    const refreshRes = await fetch(`${NETLIFY_URL}/api/auth/refresh`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ refreshToken })
                     });
-                } else {
-                    forceLogin();
+
+                    if (!refreshRes.ok) { forceLogin(); return null; }
+
+                    const refreshData = await refreshRes.json();
+                    if (refreshData.session) {
+                        token = refreshData.session.access_token;
+                        localStorage.setItem("tinytorch_token", token);
+                        if (refreshData.session.refresh_token) {
+                            localStorage.setItem("tinytorch_refresh_token", refreshData.session.refresh_token);
+                        }
+                        retryCount++;
+                        continue;
+                    } else {
+                        forceLogin();
+                        return null;
+                    }
+                }
+
+                if (!profileRes.ok) {
+                    // If errorData wasn't parsed yet
+                    if (!errorData) {
+                         try { errorData = await profileRes.json(); } catch(e) {}
+                    }
+                    throw new Error(errorData?.error || `Failed to fetch profile from Edge Function: ${profileRes.status}`);
+                }
+                
+                detailsData = await profileRes.json();
+                break; // Success
+
+              } catch (error) {
+                console.error("Error fetching progress:", error);
+                if (retryCount >= MAX_RETRIES || (error.message && !error.message.includes("Invalid Token"))) {
                     return null;
                 }
-            }
+              }
+          } while (retryCount < MAX_RETRIES);
+          
+          if (!detailsData) return null;
 
-            if (!profileRes.ok) {
-                throw new Error(`Failed to fetch profile from Edge Function: ${profileRes.status}`);
-            }
-            
-            const detailsData = await profileRes.json(); 
             const completedIds = detailsData.completed_modules || []; 
             const username = detailsData.profile?.username; 
 
@@ -1224,11 +1255,6 @@
                 passed_count: passedModules.size,
                 passed_ids: Array.from(passedModules).sort()
             };
-
-          } catch (error) {
-            console.error("Error fetching progress:", error);
-            return null;
-          }
         }
 
         // Initialize Progress
