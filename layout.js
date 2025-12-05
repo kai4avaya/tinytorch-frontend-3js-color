@@ -1285,7 +1285,10 @@
                         if (data.refresh_token) localStorage.setItem("tinytorch_refresh_token", data.refresh_token);
                         localStorage.setItem("tinytorch_user", JSON.stringify(data.user));
                         updateAuthButton(); // Update button state
-                        window.location.href = '/dashboard.html';
+                        
+                        const params = new URLSearchParams(window.location.search);
+                        const redirectAction = params.get('action') === 'profile' ? '?action=profile' : '';
+                        window.location.href = '/dashboard.html' + redirectAction;
                     }
                 } else {
                     // Signup Success
@@ -1369,13 +1372,22 @@
 
     // Check for redirect action
     const params = new URLSearchParams(window.location.search);
-    if (params.get('action') === 'login') {
+    const action = params.get('action');
+    
+    if (action === 'login') {
         // Clear any stale tokens just in case
         localStorage.removeItem("tinytorch_token");
         localStorage.removeItem("tinytorch_refresh_token");
         localStorage.removeItem("tinytorch_user");
         updateAuthButton();
         openModal('login'); // Explicitly open in login mode
+    } else if (action === 'profile') {
+        const { isLoggedIn } = getSession();
+        if (isLoggedIn) {
+            openProfileModal();
+        } else {
+            openModal('login');
+        }
     }
 
 })();

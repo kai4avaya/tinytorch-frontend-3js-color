@@ -8,7 +8,7 @@
         // For true data security, ensure all sensitive data is fetched via authenticated API calls.
         const token = localStorage.getItem("tinytorch_token");
         if (!token) {
-            window.location.href = '/index.html'; 
+            window.location.href = '/index.html' + window.location.search; 
         }
     </script>
     <meta charset="UTF-8">
