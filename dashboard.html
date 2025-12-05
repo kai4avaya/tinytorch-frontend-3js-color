@@ -644,7 +644,7 @@
                  // Extract numeric ID (e.g. "01_tensor" -> 1)
                  const numericId = parseInt(moduleId.split('_')[0], 10);
                  
-                 const response = await fetch(`${SUPABASE_EDGE_URL}/get-module-completers?module_id=${numericId}`);
+                 const response = await fetch(`${SUPABASE_URL}/get-module-completers?module_id=${numericId}`);
                  
                  if (!response.ok) throw new Error("Failed to fetch community data");
                  
