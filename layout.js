@@ -62,12 +62,20 @@
             transform: translateY(-10.5px) rotate(-45deg);
         }
 
-        /* --- Login/Account Button --- */
-        .login-btn {
+        /* --- Top Right Actions Container --- */
+        .top-right-actions {
             position: fixed;
             top: 30px;
             right: 30px;
             z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- Login/Account Button --- */
+        .login-btn {
+            /* Position removed, handled by container */
             font-family: 'Verdana', sans-serif;
             font-size: 0.95rem;
             font-weight: bold;
@@ -94,6 +102,25 @@
             width: 18px;
             height: 18px;
             fill: currentColor;
+        }
+
+        /* --- Nav Icon Buttons --- */
+        .nav-icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: rgba(30, 30, 30, 0.8);
+            transition: all 0.2s ease;
+            background: transparent;
+            border: 1px solid transparent; /* Keep sizing consistent */
+        }
+
+        .nav-icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #ff6600;
         }
 
         /* Slide-out Sidebar (Desktop Default) */
@@ -567,7 +594,7 @@
                 background: #ff6600; 
             }
             
-            .login-btn {
+            .top-right-actions {
                 top: 20px;
                 right: 20px;
             }
@@ -580,20 +607,30 @@
     
     const userIcon = `<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>`;
     const logoutIcon = `<path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>`;
+    
+    const footprintsIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-footprints-icon lucide-footprints"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>`;
+    const globeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-earth-icon lucide-earth"><path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"/><path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"/><path d="M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05"/><circle cx="12" cy="12" r="10"/></svg>`;
 
     // Initialize button state based on current session
-    function updateAuthButton() {
+    function updateNavState() {
         const { isLoggedIn, email: userEmail } = getSession();
         const currentIcon = isLoggedIn ? logoutIcon : userIcon;
         const btnText = isLoggedIn ? `${userEmail}` : 'Create or Login into Account';
         const btnClass = isLoggedIn ? 'login-btn logged-in' : 'login-btn';
 
         const authBtnElement = document.getElementById('authBtn');
+        const navDashboard = document.getElementById('navDashboardBtn');
+        const navCommunity = document.getElementById('navCommunityBtn');
+
         if (authBtnElement) {
             authBtnElement.className = btnClass;
             authBtnElement.querySelector('.login-icon').innerHTML = currentIcon;
             authBtnElement.querySelector('.btn-text').textContent = btnText;
         }
+        
+        // Show/Hide Extra Icons
+        if (navDashboard) navDashboard.style.display = isLoggedIn ? 'flex' : 'none';
+        if (navCommunity) navCommunity.style.display = isLoggedIn ? 'flex' : 'none';
     }
 
     // Define initial state variables for layoutHTML
@@ -601,6 +638,7 @@
     const currentIcon = isLoggedIn ? logoutIcon : userIcon;
     const btnText = isLoggedIn ? `Logout of ${userEmail}` : 'Create Account';
     const btnClass = isLoggedIn ? 'login-btn logged-in' : 'login-btn';
+    const displayExtras = isLoggedIn ? 'flex' : 'none';
 
     const layoutHTML = `
         <button class="menu-btn" id="menuBtn">
@@ -609,12 +647,22 @@
             <span></span>
         </button>
         
-        <a href="#" class="${btnClass}" id="authBtn">
-            <svg class="login-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                ${currentIcon}
-            </svg>
-            <span class="btn-text">${btnText}</span>
-        </a>
+        <div class="top-right-actions">
+            <a href="#" class="${btnClass}" id="authBtn">
+                <svg class="login-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    ${currentIcon}
+                </svg>
+                <span class="btn-text">${btnText}</span>
+            </a>
+            
+            <a href="dashboard.html" class="nav-icon-btn" id="navDashboardBtn" style="display: ${displayExtras};" title="Dashboard">
+                ${footprintsIcon}
+            </a>
+            
+            <a href="community.html" class="nav-icon-btn" id="navCommunityBtn" style="display: ${displayExtras};" title="Community">
+                ${globeIcon}
+            </a>
+        </div>
 
         <nav class="sidebar" id="sidebar">
             <a href="/" class="nav-item">Home</a>
@@ -735,7 +783,7 @@
     `;
     
     document.body.insertAdjacentHTML('afterbegin', layoutHTML);
-    updateAuthButton(); // Initialize the button state
+    updateNavState(); // Initialize the button state
 
 
     // 3. Add Event Listeners
@@ -1284,7 +1332,7 @@
                         localStorage.setItem("tinytorch_token", data.access_token);
                         if (data.refresh_token) localStorage.setItem("tinytorch_refresh_token", data.refresh_token);
                         localStorage.setItem("tinytorch_user", JSON.stringify(data.user));
-                        updateAuthButton(); // Update button state
+                        updateNavState(); // Update button state
                         
                         const params = new URLSearchParams(window.location.search);
                         const redirectAction = params.get('action') === 'profile' ? '?action=profile' : '';
@@ -1294,7 +1342,7 @@
                     // Signup Success
                     alert('Account created successfully! Please check your email to confirm before logging in.');
                     setMode('login'); // Switch to login
-                    updateAuthButton(); // Update button state
+                    updateNavState(); // Update button state
                 }
             }
 
@@ -1315,7 +1363,7 @@
         if (confirm('Are you sure you want to logout?')) {
             localStorage.removeItem("tinytorch_token");
             localStorage.removeItem("tinytorch_user");
-            updateAuthButton(); // Update button state
+            updateNavState(); // Update button state
             window.location.href = '/';
         }
     }
@@ -1379,7 +1427,7 @@
         localStorage.removeItem("tinytorch_token");
         localStorage.removeItem("tinytorch_refresh_token");
         localStorage.removeItem("tinytorch_user");
-        updateAuthButton();
+        updateNavState();
         openModal('login'); // Explicitly open in login mode
     } else if (action === 'profile') {
         const { isLoggedIn } = getSession();
