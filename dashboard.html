@@ -446,7 +446,7 @@
 
     <div id="ui-layer">
         <h1>Your Tiny Torch Journey</h1>
-        <p>Current Module: 09 Spatial (CNNs)</p>
+        <p>Current Module: <a id="current-module-link" href="#" style="cursor: pointer; text-decoration: none; color: inherit; pointer-events: auto;">09 Spatial (CNNs)</a></p>
         <p style="font-size: 0.8rem; color: #aaa; margin-top: 4px;">(Click nodes for details)</p>
     </div>
 
@@ -524,6 +524,9 @@
             padding: 60,       
             currentStageIndex: 0 // Initial state, updated by API
         };
+
+        const MODULE_PAGE_SUFFIX = "_ABOUT.html";
+        const SVG_ICON_STRING = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:4px; vertical-align:middle; opacity:0.7;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
 
         // Data: 20 Modules
         const milestones = [
@@ -692,7 +695,10 @@
 
         function openModal(data) {
             mTitle.textContent = data.title;
-            mSubtitle.textContent = `Module ${data.id}`;
+            // Make subtitle a link
+            const linkUrl = `${TINYTORCH_AI_URL}/modules/${data.id}${MODULE_PAGE_SUFFIX}`;
+            mSubtitle.innerHTML = `<a href="${linkUrl}" target="_blank" style="color:inherit; text-decoration:none; display:inline-flex; align-items:center;">Module ${data.id}${SVG_ICON_STRING}</a>`;
+            
             mYear.textContent = `Concept Era: ${data.year}`;
             mDesc.textContent = data.desc;
             
@@ -1103,6 +1109,7 @@
         const SUPABASE_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1";
         const NETLIFY_URL = "https://tinytorch.netlify.app";
         const API_BASE_URL = SUPABASE_URL; // Backwards compatibility
+        const TINYTORCH_AI_URL = "https://tinytorch.ai";
         
         const MODULE_MAP = {
           "01": { id: "01", title: "Tensor Basics", dir: "01_tensor" },
@@ -1267,14 +1274,18 @@
                 
                 config.currentStageIndex = nextIndex;
                 
+                const currentModuleLink = document.getElementById('current-module-link');
+                
                 // Update UI Text (Main Header)
                 const m = milestones[nextIndex];
                 if (m) {
-                     const uiHeader = document.querySelector('#ui-layer p');
-                     if(uiHeader) {
-                         // m.id is "01_tensor" -> "01"
-                         const idNum = m.id.split('_')[0];
-                         uiHeader.textContent = `Current Module: ${idNum} ${m.title}`;
+                     const idNum = m.id.split('_')[0];
+                     if (currentModuleLink) {
+                         // Update content with SVG
+                         currentModuleLink.innerHTML = `${idNum} ${m.title}${SVG_ICON_STRING}`;
+                         currentModuleLink.href = `${TINYTORCH_AI_URL}/modules/${m.id}${MODULE_PAGE_SUFFIX}`; // Set the href
+                         currentModuleLink.target = "_blank"; // Open in new tab
+                         currentModuleLink.style.pointerEvents = "auto"; // Ensure clickable over canvas
                      }
                 }
 
