@@ -662,7 +662,7 @@
                  // Show max 5 recent completers
                  data.slice(0, 5).forEach(user => {
                      const date = new Date(user.finished_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                     const displayName = user.name || user.username || "Anonymous";
+                     const displayName = user.name || user.username || user.email || "Anonymous";
                      
                      let instHtml = "";
                      if (user.institution) {
@@ -1412,8 +1412,8 @@
                 const modules = data.completed_modules || [];
 
                 // Fill Data
-                elName.textContent = p.full_name || p.username || "Unknown User";
-                elMeta.textContent = `@${p.username || username}`;
+                elName.textContent = p.full_name || p.username || p.email || "Unknown User";
+                elMeta.textContent = `@${p.username || p.email || 'N/A'}`;
                 elBio.textContent = p.bio || "No bio available.";
                 
                 let inst = "N/A";

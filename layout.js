@@ -710,10 +710,6 @@
                 <h2 class="profile-title">Your Profile</h2>
                 <form id="profileForm">
                     <div class="profile-form-group">
-                        <label for="profileUsername" class="profile-label">Username:</label>
-                        <input type="text" class="profile-input" id="profileUsername" placeholder="Username">
-                    </div>
-                    <div class="profile-form-group">
                         <label for="profileDisplayName" class="profile-label">Display Name:</label>
                         <input type="text" class="profile-input" id="profileDisplayName" placeholder="Display Name">
                     </div>
@@ -806,7 +802,6 @@
     const profileOverlay = document.getElementById('profileOverlay');
     const profileClose = document.getElementById('profileClose');
     const profileForm = document.getElementById('profileForm');
-    const profileUsernameInput = document.getElementById('profileUsername');
     const profileDisplayNameInput = document.getElementById('profileDisplayName');
     const profileAvatarUrlInput = document.getElementById('profileAvatarUrl');
     const profileIsPublicCheckbox = document.getElementById('profileIsPublic');
@@ -1085,7 +1080,6 @@
         // Map API response keys to Form Input IDs
         // Response: avatar, bio, socials, institution (array), websites (array), display_name, preferences, is_public
         
-        profileUsernameInput.value = data.username || '';
         profileDisplayNameInput.value = data.display_name || '';
         profileAvatarUrlInput.value = data.avatar || data.avatar_url || ''; // Support both
         profileIsPublicCheckbox.checked = data.is_public || false;
@@ -1125,7 +1119,6 @@
         }
 
         const updatedProfile = {
-            username: profileUsernameInput.value,
             display_name: profileDisplayNameInput.value,
             avatar: profileAvatarUrlInput.value, // Changed from avatar_url to match GET response
             is_public: profileIsPublicCheckbox.checked,
