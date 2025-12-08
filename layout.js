@@ -3,12 +3,16 @@
     const SUPABASE_URL = "https://zrvmjrxhokwwmjacyhpq.supabase.co/functions/v1";
     const NETLIFY_URL = "https://tinytorch.netlify.app"; 
 
+    // URL Base Path Logic for Community Site Hosting
+    const isCommunitySite =  window.location.hostname === 'mlsysbook.ai' || window.location.hostname === 'tinytorch.ai' || (window.location.hostname === 'localhost' && window.location.port === '8000');
+    const basePath = isCommunitySite ? '/community' : '';
+
     function forceLogin() {
         console.warn("Session expired or invalid. Redirecting to login...");
         localStorage.removeItem("tinytorch_token");
         localStorage.removeItem("tinytorch_refresh_token");
         localStorage.removeItem("tinytorch_user");
-        window.location.href = '/index.html?action=login';
+        window.location.href = basePath + '/index.html?action=login';
     }
 
     // State Management
@@ -655,34 +659,34 @@
                 <span class="btn-text">${btnText}</span>
             </a>
             
-            <a href="dashboard.html" class="nav-icon-btn" id="navDashboardBtn" style="display: ${displayExtras};" title="Dashboard">
+            <a href="${basePath}/dashboard.html" class="nav-icon-btn" id="navDashboardBtn" style="display: ${displayExtras};" title="Dashboard">
                 ${footprintsIcon}
             </a>
             
-            <a href="community.html" class="nav-icon-btn" id="navCommunityBtn" style="display: ${displayExtras};" title="Community">
+            <a href="${basePath}/community.html" class="nav-icon-btn" id="navCommunityBtn" style="display: ${displayExtras};" title="Community">
                 ${globeIcon}
             </a>
         </div>
 
         <nav class="sidebar" id="sidebar">
-            <a href="/" class="nav-item">Home</a>
-            <a href="about.html" class="nav-item" id="aboutLink">About</a>
-            <a href="events.html" class="nav-item">Events</a>
-            <a href="community.html" class="nav-item nav-item-restricted">
+            <a href="${basePath}/index.html" class="nav-item">Home</a>
+            <a href="${basePath}/about.html" class="nav-item" id="aboutLink">About</a>
+            <a href="${basePath}/events.html" class="nav-item">Events</a>
+            <a href="${basePath}/community.html" class="nav-item nav-item-restricted">
                 <span>Community</span>
                 <span class="lock-container">
                     <svg class="lock-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-10H9V7c0-1.66 1.34-3 3-3s3 1.34 3 3v3z"/></svg>
                     <span class="lock-tooltip">Account Required</span>
                 </span>
             </a>
-            <a href="dashboard.html" class="nav-item nav-item-restricted">
+            <a href="${basePath}/dashboard.html" class="nav-item nav-item-restricted">
                 <span>Dashboard</span>
                 <span class="lock-container">
                     <svg class="lock-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10h-1V7c0-2.76-2.24-5-5-5S7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3-10H9V7c0-1.66 1.34-3 3-3s3 1.34 3 3v3z"/></svg>
                     <span class="lock-tooltip">Account Required</span>
                 </span>
             </a>
-            <a href="contact.html" class="nav-item">Contact</a>
+            <a href="${basePath}/contact.html" class="nav-item">Contact</a>
         </nav>
 
         <!-- Auth Modal -->
@@ -1033,15 +1037,18 @@
                     if (!refreshRes.ok) { forceLogin(); return; }
 
                     const refreshData = await refreshRes.json();
-                    if (refreshData.session) {
-                        token = refreshData.session.access_token;
+                    const session = refreshData.session || refreshData; // Handle nested 'session' or direct response
+
+                    if (session && session.access_token) {
+                        token = session.access_token;
                         localStorage.setItem("tinytorch_token", token);
-                        if (refreshData.session.refresh_token) {
-                            localStorage.setItem("tinytorch_refresh_token", refreshData.session.refresh_token);
+                        if (session.refresh_token) {
+                            localStorage.setItem("tinytorch_refresh_token", session.refresh_token);
                         }
                         retryCount++; 
                         continue; 
                     } else {
+                        console.warn("Refresh failed: No access token in response", refreshData);
                         forceLogin();
                         return;
                     }
@@ -1185,15 +1192,18 @@
                     if (!refreshRes.ok) { forceLogin(); return; }
 
                     const refreshData = await refreshRes.json();
-                    if (refreshData.session) {
-                        token = refreshData.session.access_token;
+                    const session = refreshData.session || refreshData; // Handle nested 'session' or direct response
+
+                    if (session && session.access_token) {
+                        token = session.access_token;
                         localStorage.setItem("tinytorch_token", token);
-                        if (refreshData.session.refresh_token) {
-                            localStorage.setItem("tinytorch_refresh_token", refreshData.session.refresh_token);
+                        if (session.refresh_token) {
+                            localStorage.setItem("tinytorch_refresh_token", session.refresh_token);
                         }
                         retryCount++;
                         continue;
                     } else {
+                        console.warn("Refresh failed: No access token in response", refreshData);
                         forceLogin();
                         return;
                     }
@@ -1329,7 +1339,12 @@
                         
                         const params = new URLSearchParams(window.location.search);
                         const redirectAction = params.get('action') === 'profile' ? '?action=profile' : '';
-                        window.location.href = '/dashboard.html' + redirectAction;
+                        const next = params.get('next');
+                        if (next) {
+                            window.location.href = basePath + '/' + next + redirectAction;
+                        } else {
+                            window.location.href = basePath + '/dashboard.html' + redirectAction;
+                        }
                     }
                 } else {
                     // Signup Success
@@ -1357,7 +1372,7 @@
             localStorage.removeItem("tinytorch_token");
             localStorage.removeItem("tinytorch_user");
             updateNavState(); // Update button state
-            window.location.href = '/';
+            window.location.href = basePath + '/';
         }
     }
 
@@ -1428,6 +1443,11 @@
             openProfileModal();
         } else {
             openModal('login');
+        }
+    } else if (action === 'join') {
+        const { isLoggedIn } = getSession();
+        if (!isLoggedIn) {
+            openModal('signup');
         }
     }
 
